@@ -6,4 +6,7 @@
 
 - [Deep convolutional neural network based disease identification in grapevine leaf images](https://link.springer.com/article/10.1007/s11042-022-12662-0#code-availability)
 - [Leaf Disease Recognition in Vine Plants Based on Local Binary Patterns and One Class Support Vector Machines](https://link.springer.com/chapter/10.1007/978-3-319-44944-9_27)
+- [Computation Offloading Toward Edge Computing](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8758310)
+- [Joint Offloading and Computation Energy EfficiencyMaximization in a Mobile Edge Computing System](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8611399)
+- [Mobile Computation Offloading for Application Throughput Fairness and Energy Efficiency](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8526324)
   
