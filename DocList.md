@@ -9,4 +9,6 @@
 - [Computation Offloading Toward Edge Computing](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8758310)
 - [Joint Offloading and Computation Energy EfficiencyMaximization in a Mobile Edge Computing System](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8611399)
 - [Mobile Computation Offloading for Application Throughput Fairness and Energy Efficiency](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8526324)
-  
+
+-[Leaf Disease Recognition in Vine Plants Based on Local Binary Patterns and One Class Support Vector Machines](https://link.springer.com/chapter/10.1007/978-3-319-44944-9_27)
+-[Comparison of SIFT Encoded and Deep Learning Features for the Classification and Detection of Esca Disease in Bordeaux Vineyards](https://www.mdpi.com/2072-4292/11/1/1)
