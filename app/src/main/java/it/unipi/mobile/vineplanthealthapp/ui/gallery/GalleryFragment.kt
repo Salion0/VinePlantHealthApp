@@ -20,9 +20,21 @@ import android.graphics.Bitmap
 import android.widget.BaseAdapter
 import android.content.Context
 import android.media.ExifInterface
+import android.app.Dialog
+import android.graphics.drawable.ColorDrawable
+import android.graphics.Color
+import android.view.Window
+import android.widget.TextView
+import com.github.chrisbanes.photoview.PhotoView
 
 
-data class Image(val bitmap: Bitmap, val uri: Uri)
+data class Image(
+    val bitmap: Bitmap,
+    val uri: Uri,
+    val name: String? = null,
+    var plantStatus: String? = null
+)
+
 private const val MY_PERMISSIONS_REQUEST_READ_MEDIA_IMAGES = 1
 
 class GalleryFragment : Fragment() {
@@ -95,7 +107,7 @@ class GalleryFragment : Fragment() {
                 if (file.isFile && (file.path.endsWith(".jpg") || file.path.endsWith(".png"))) {
                     val bitmap = BitmapFactory.decodeFile(file.absolutePath)
                     val uri = Uri.fromFile(file)
-                    images.add(Image(bitmap, uri))
+                    images.add(Image(bitmap, uri, file.name))
                 }
             }
         }
@@ -113,13 +125,48 @@ class GalleryFragment : Fragment() {
         galleryGridView.setOnItemClickListener { parent, view, position, id ->
             val image = galleryGridView.adapter.getItem(position) as Image
             val geoLocation = image.uri.path?.let { getGeoLocation(it) }
-            if (geoLocation != null)
-                Toast.makeText(
-                    requireContext(),
-                    "Lat: ${geoLocation.first}, Lon: ${geoLocation.second}",
-                    Toast.LENGTH_SHORT
-                ).show()
+            if (geoLocation != null) {
+                image.plantStatus = "Healthy"
+                showImageDialog(image, geoLocation);
+            }
         }
+
+    }
+
+    //function that open a dialog to show the image in full screen + other
+    private fun showImageDialog(image: Image, geoLocation: Pair<Double, Double>) {
+        val dialog = Dialog(requireContext())
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.setContentView(R.layout.dialog_image)
+
+        val imageView = dialog.findViewById<ImageView>(R.id.image)
+        val imagePath = dialog.findViewById<TextView>(R.id.imagePath)
+        imageView.setImageBitmap(image.bitmap)
+
+        //al tocco ingrandisce l'immagine e permette lo zoom con tocco
+/*        imageView.setOnClickListener {
+            val zoomDialog = Dialog(requireContext())
+            zoomDialog.setContentView(R.layout.dialog_image)
+            val photoView = zoomDialog.findViewById<PhotoView>(R.id.photoView)
+            photoView.setImageResource(image.bitmap)
+            zoomDialog.show()
+        }*/
+
+
+        imagePath.text = image.name
+
+        //aggiungere if per controllo stato pianta
+        val plantStatus = dialog.findViewById<TextView>(R.id.plantStatus)
+        plantStatus.text = "HEALTHY"
+        plantStatus.setTextColor(Color.GREEN)
+
+        val lat = dialog.findViewById<TextView>(R.id.lat)
+        val lon = dialog.findViewById<TextView>(R.id.lon)
+        lat.text = "Lat: ${geoLocation.first}"
+        lon.text = "Lon: ${geoLocation.second}"
+
+        dialog.show()
     }
 
     class ImageAdapter(private val context: Context, var images: List<Image>) : BaseAdapter() {
