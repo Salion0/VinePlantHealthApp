@@ -11,4 +11,10 @@
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
     <string name="menu_map">Map</string>
+    <string name="msg_location_permission">Per visualizzare la mappa sono necessari i permessi di localizzazione</string>
+    <string name="title_location_settings">Attiva localizzazione</string>
+    <string name="msg_location_settings">Il GPS è disabilitato. Vuoi attivarlo?</string>
+    <string name="positive_button">Yes</string>
+    <string name="negative_button">No</string>
+
 </resources>
