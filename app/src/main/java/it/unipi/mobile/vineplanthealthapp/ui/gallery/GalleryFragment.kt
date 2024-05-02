@@ -26,6 +26,8 @@ import android.graphics.Color
 import android.view.Window
 import android.widget.TextView
 import com.github.chrisbanes.photoview.PhotoView
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.ActivityResultLauncher
 
 
 data class Image(
@@ -35,11 +37,10 @@ data class Image(
     var plantStatus: String? = null
 )
 
-private const val MY_PERMISSIONS_REQUEST_READ_MEDIA_IMAGES = 1
-
 class GalleryFragment : Fragment() {
 
     private lateinit var galleryGridView: GridView
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<Array<String>>
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,10 +48,40 @@ class GalleryFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         val view = inflater.inflate(R.layout.fragment_gallery, container, false)
-
-        // Retrieve the GridView from the layout
         galleryGridView = view.findViewById(R.id.gallery_grid_view)
 
+        requestPermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+                val granted = permissions.entries.all { it.value }
+                if (!granted) {
+                    showPermissionToast()
+                    parentFragmentManager.popBackStack()
+                }
+                else {
+                    loadImages()
+                    showLocation()
+                }
+            }
+
+        if (hasPermissions()) {
+            loadImages()
+            showLocation()
+        }
+        else {
+            if (shouldShowRequestPermissionRationale()) {
+                showPermissionToast()
+                parentFragmentManager.popBackStack()
+            } else {
+                requestPermissions()
+            }
+        }
+
+        return view
+    }
+
+
+
+    private fun hasPermissions(): Boolean {
         val checkMediaPermission = ContextCompat.checkSelfPermission(
             requireContext(),
             Manifest.permission.READ_MEDIA_IMAGES
@@ -59,42 +90,36 @@ class GalleryFragment : Fragment() {
             requireContext(),
             Manifest.permission.ACCESS_MEDIA_LOCATION
         )
+        return checkMediaPermission == PackageManager.PERMISSION_GRANTED && checkLocationPermission == PackageManager.PERMISSION_GRANTED
+    }
 
-        if (checkMediaPermission != PackageManager.PERMISSION_GRANTED && checkLocationPermission != PackageManager.PERMISSION_GRANTED) {
-            val permissionMedia = ActivityCompat.shouldShowRequestPermissionRationale(
-                requireActivity(),
-                Manifest.permission.READ_MEDIA_IMAGES
-            );
-            val permissionLocation = ActivityCompat.shouldShowRequestPermissionRationale(
-                requireActivity(),
+    private fun shouldShowRequestPermissionRationale(): Boolean {
+        val permissionMedia = ActivityCompat.shouldShowRequestPermissionRationale(
+            requireActivity(),
+            Manifest.permission.READ_MEDIA_IMAGES
+        )
+        val permissionLocation = ActivityCompat.shouldShowRequestPermissionRationale(
+            requireActivity(),
+            Manifest.permission.ACCESS_MEDIA_LOCATION
+        )
+        return permissionMedia || permissionLocation
+    }
+
+    private fun requestPermissions() {
+        requestPermissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.READ_MEDIA_IMAGES,
                 Manifest.permission.ACCESS_MEDIA_LOCATION
-            );
-            // Permission is not granted
-            if (!permissionMedia || !permissionLocation) {
-                Toast.makeText(
-                    requireContext(),
-                    "Gallery and Location permissions needed!",
-                    Toast.LENGTH_SHORT
-                ).show()
-            } else {
-                // Request the permission
-                ActivityCompat.requestPermissions(
-                    requireActivity(),
-                    arrayOf(
-                        Manifest.permission.READ_MEDIA_IMAGES,
-                        Manifest.permission.ACCESS_MEDIA_LOCATION
-                    ),
-                    MY_PERMISSIONS_REQUEST_READ_MEDIA_IMAGES
-                )
-                loadImages()
-                showLocation()
-            }
-        }
-        else{
-            loadImages()
-            showLocation()
-        }
-        return view
+            )
+        )
+    }
+
+    private fun showPermissionToast() {
+        Toast.makeText(
+            requireContext(),
+            "Permission required to access images",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
     private fun loadImages() {
