@@ -1,46 +1,45 @@
 package it.unipi.mobile.vineplanthealthapp.ui.gallery
 
+import android.Manifest
+import android.app.Dialog
+import android.content.Context
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import it.unipi.mobile.vineplanthealthapp.R
-import android.Manifest
+import android.view.Window
+import android.widget.BaseAdapter
+import android.widget.Button
 import android.widget.GridView
-import android.content.pm.PackageManager
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.EditText
+import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import android.widget.Toast
-import android.graphics.BitmapFactory
-import android.net.Uri
-import android.os.Environment
-import android.widget.ImageView
-import android.graphics.Bitmap
-import android.widget.BaseAdapter
-import android.content.Context
-import android.media.ExifInterface
-import android.app.Dialog
-import android.graphics.drawable.ColorDrawable
-import android.graphics.Color
-import android.view.Window
-import android.widget.TextView
-import com.github.chrisbanes.photoview.PhotoView
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.ActivityResultLauncher
+import androidx.core.content.getSystemService
+import androidx.fragment.app.Fragment
+import it.unipi.mobile.vineplanthealthapp.R
+import it.unipi.mobile.vineplanthealthapp.utils.GalleryUtils
+import it.unipi.mobile.vineplanthealthapp.utils.LocationUtils
+import java.io.File
 
-
-data class Image(
-    val bitmap: Bitmap,
-    val uri: Uri,
-    val name: String? = null,
-    var plantStatus: String? = null
-)
 
 class GalleryFragment : Fragment() {
 
     private lateinit var galleryGridView: GridView
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<Array<String>>
+    private lateinit var galleryUtils : GalleryUtils
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -49,6 +48,7 @@ class GalleryFragment : Fragment() {
     ): View {
         val view = inflater.inflate(R.layout.fragment_gallery, container, false)
         galleryGridView = view.findViewById(R.id.gallery_grid_view)
+        galleryUtils = GalleryUtils()
 
         requestPermissionLauncher =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -59,13 +59,11 @@ class GalleryFragment : Fragment() {
                 }
                 else {
                     loadImages()
-                    showLocation()
                 }
             }
 
         if (hasPermissions()) {
             loadImages()
-            showLocation()
         }
         else {
             if (shouldShowRequestPermissionRationale()) {
@@ -122,6 +120,18 @@ class GalleryFragment : Fragment() {
         ).show()
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (hasPermissions()) {
+            loadImages()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        galleryGridView.adapter = null
+    }
+
     private fun loadImages() {
         val images = mutableListOf<Image>()
         val picturesDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
@@ -135,51 +145,70 @@ class GalleryFragment : Fragment() {
                     images.add(Image(bitmap, uri, file.name))
                 }
             }
+        }else{
+            Toast.makeText(requireContext(), "No images found", Toast.LENGTH_SHORT).show()
+        }
+
+        galleryGridView.setOnItemClickListener { parent, view, position, id ->
+            val image = galleryGridView.adapter.getItem(position) as Image
+            image.plantStatus = "Healthy"
+            try {
+                val geoLocation = galleryUtils.getGeoLocation(image.uri.path?:"")
+                showImageDialog(image, geoLocation)
+            } catch (Exception: Exception){
+                showImageDialog(image, null)
+            }
         }
 
         val imageAdapter = ImageAdapter(requireContext(), images)
         galleryGridView.adapter = imageAdapter
     }
 
-    private fun showLocation(){
-        val imagesList = loadImages()
-        if (listOf(imagesList).isEmpty()) {
-            Toast.makeText(requireContext(), "No images found", Toast.LENGTH_SHORT).show()
-        }
-
-        galleryGridView.setOnItemClickListener { parent, view, position, id ->
-            val image = galleryGridView.adapter.getItem(position) as Image
-            val geoLocation = image.uri.path?.let { getGeoLocation(it) }
-            if (geoLocation != null) {
-                image.plantStatus = "Healthy"
-                showImageDialog(image, geoLocation);
-            }
-        }
-
-    }
 
     //function that open a dialog to show the image in full screen + other
-    private fun showImageDialog(image: Image, geoLocation: Pair<Double, Double>) {
+    private fun showImageDialog(image: Image, geoLocation: Pair<Double, Double> ?) {
         val dialog = Dialog(requireContext())
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.setContentView(R.layout.dialog_image)
-
         val imageView = dialog.findViewById<ImageView>(R.id.image)
-        val imagePath = dialog.findViewById<TextView>(R.id.imagePath)
         imageView.setImageBitmap(image.bitmap)
 
-        //al tocco ingrandisce l'immagine e permette lo zoom con tocco
-/*        imageView.setOnClickListener {
-            val zoomDialog = Dialog(requireContext())
-            zoomDialog.setContentView(R.layout.dialog_image)
-            val photoView = zoomDialog.findViewById<PhotoView>(R.id.photoView)
-            photoView.setImageResource(image.bitmap)
-            zoomDialog.show()
-        }*/
+        //rename listener
+        val imageName = dialog.findViewById<EditText>(R.id.imageName)
+        imageName.setText(image.name)
 
+        val revertButton = dialog.findViewById<ImageButton>(R.id.revertNameButton)
+        val editButton = dialog.findViewById<ImageButton>(R.id.editNameButton)
+        val saveButton = dialog.findViewById<ImageButton>(R.id.saveNameButton)
 
-        imagePath.text = image.name
+        revertButton.setOnClickListener {
+            imageName.setText(image.name)
+            galleryUtils.setNotEditable(imageName, saveButton, revertButton,editButton)
+        }
+
+        saveButton.setOnClickListener {
+            val newName = imageName.text.toString()
+                val file = File(image.uri.path)
+                val newFile = File(file.parent, newName)
+                if(file.renameTo(newFile)){
+                    image.name = newName
+                    imageName.setText(newName)
+                    Toast.makeText(requireContext(), "Image renamed successfully", Toast.LENGTH_SHORT).show()
+                    galleryUtils.setNotEditable(imageName, saveButton, revertButton, editButton)
+                    view.let { activity?.currentFocus?.clearFocus() }
+                    dialog.setOnDismissListener {
+                        loadImages()
+                    }
+                }
+                else{
+                    Toast.makeText(requireContext(), "Invalid image name", Toast.LENGTH_SHORT).show()
+                }
+        }
+
+        editButton.setOnClickListener {
+            galleryUtils.setEditable(imageName, saveButton, revertButton,editButton)
+        }
 
         //aggiungere if per controllo stato pianta
         val plantStatus = dialog.findViewById<TextView>(R.id.plantStatus)
@@ -188,50 +217,90 @@ class GalleryFragment : Fragment() {
 
         val lat = dialog.findViewById<TextView>(R.id.lat)
         val lon = dialog.findViewById<TextView>(R.id.lon)
-        lat.text = "Lat: ${geoLocation.first}"
-        lon.text = "Lon: ${geoLocation.second}"
+        if(geoLocation == null){
+            lat.text = "Lat: Not available"
+            lon.text = "Lon: Not available"
+        }
+        else{
+            lat.text = "Lat: ${geoLocation.first}"
+            lon.text = "Lon: ${geoLocation.second}"
+        }
+
+        val closeButton = dialog.findViewById<ImageButton>(R.id.closeButton)
+        closeButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        val classifyButton = dialog.findViewById<Button>(R.id.classifyButton)
+        classifyButton.setOnClickListener {
+            classify()
+        }
+
+        //open dialog to confirm deletion
+        val deleteButton = dialog.findViewById<Button>(R.id.deleteButton)
+        deleteButton.setOnClickListener {
+            val deleteDialog = Dialog(requireContext())
+            deleteDialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+            deleteDialog.window?.setBackgroundDrawable(ColorDrawable(Color.WHITE))
+            deleteDialog.setContentView(R.layout.confirm_delete)
+            val confirmDelete = deleteDialog.findViewById<Button>(R.id.confirmDelete)
+            val cancelDelete = deleteDialog.findViewById<Button>(R.id.cancelDelete)
+            confirmDelete.setOnClickListener {
+                val file = File(image.uri.path)
+                if (file.exists()) {
+                    file.delete()
+                    Toast.makeText(requireContext(), "Image deleted successfully", Toast.LENGTH_SHORT).show()
+                    deleteDialog.dismiss()
+                    dialog.dismiss()
+                    loadImages()
+                }
+            }
+            cancelDelete.setOnClickListener {
+                deleteDialog.dismiss()
+            }
+            deleteDialog.show()
+        }
 
         dialog.show()
     }
 
-    class ImageAdapter(private val context: Context, var images: List<Image>) : BaseAdapter() {
-        override fun getCount(): Int {
-            return images.size
-        }
+    fun classify(){
+        Toast.makeText(requireContext(), "Classify", Toast.LENGTH_SHORT).show()
+    }
+}
 
-        override fun getItem(position: Int): Any {
-            return images[position]
-        }
+data class Image(
+    val bitmap: Bitmap,
+    val uri: Uri,
+    var name: String? = null,
+    var plantStatus: String? = null
+)
 
-        override fun getItemId(position: Int): Long {
-            return position.toLong()
-        }
-
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-            val imageView: ImageView
-            if (convertView == null) {
-                imageView = ImageView(context)
-                imageView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,1000)
-                imageView.scaleType = ImageView.ScaleType.CENTER_CROP
-                imageView.setPadding(10, 10, 10, 10)
-            } else {
-                imageView = convertView as ImageView
-            }
-
-            imageView.setImageBitmap(images[position].bitmap)
-            return imageView
-        }
+class ImageAdapter(private val context: Context, var images: List<Image>) : BaseAdapter() {
+    override fun getCount(): Int {
+        return images.size
     }
 
-    fun getGeoLocation(imagePath: String): Pair<Double, Double>? {
-        val exifInterface = ExifInterface(imagePath)
+    override fun getItem(position: Int): Any {
+        return images[position]
+    }
 
-        val latLong = FloatArray(2)
-        val hasLatLong = exifInterface.getLatLong(latLong)
-        if (hasLatLong) {
-            return Pair(latLong[0].toDouble(), latLong[1].toDouble())
+    override fun getItemId(position: Int): Long {
+        return position.toLong()
+    }
+
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+        val imageView: ImageView
+        if (convertView == null) {
+            imageView = ImageView(context)
+            imageView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,1000)
+            imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+            imageView.setPadding(10, 10, 10, 10)
+        } else {
+            imageView = convertView as ImageView
         }
-        Toast.makeText(requireContext(), "No geolocation found for this image", Toast.LENGTH_SHORT).show()
-        return null
+
+        imageView.setImageBitmap(images[position].bitmap)
+        return imageView
     }
 }
