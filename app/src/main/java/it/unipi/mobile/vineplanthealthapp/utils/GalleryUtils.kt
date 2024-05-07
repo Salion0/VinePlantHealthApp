@@ -4,6 +4,8 @@ import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
 import androidx.exifinterface.media.ExifInterface
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class GalleryUtils {
 
@@ -35,5 +37,14 @@ class GalleryUtils {
             return Pair(latLong[0].toDouble(), latLong[1].toDouble())
         }
         return null
+    }
+
+    public fun getTimestamp(imagePath: String): LocalDateTime? {
+        val exifInterface = ExifInterface(imagePath)
+        val timestamp = exifInterface.getAttribute(ExifInterface.TAG_DATETIME)
+        return timestamp?.let {
+            val formatter = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")
+            LocalDateTime.parse(it, formatter)
+        }
     }
 }

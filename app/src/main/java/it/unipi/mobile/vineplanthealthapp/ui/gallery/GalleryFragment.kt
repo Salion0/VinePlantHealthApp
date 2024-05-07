@@ -33,6 +33,7 @@ import it.unipi.mobile.vineplanthealthapp.utils.GalleryUtils
 import it.unipi.mobile.vineplanthealthapp.utils.LocationUtils
 import it.unipi.mobile.vineplanthealthapp.utils.MainUtils
 import java.io.File
+import java.sql.Timestamp
 
 
 class GalleryFragment : Fragment() {
@@ -268,6 +269,7 @@ data class Image(
     val bitmap: Bitmap,
     val uri: Uri,
     var name: String? = null,
+    var timestamp: Timestamp? = null,
     var plantStatus: String? = null
 )
 
