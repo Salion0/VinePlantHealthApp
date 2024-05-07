@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.ExifInterface
 import android.os.Environment
+import it.unipi.mobile.vineplanthealthapp.ui.gallery.Image
 import java.io.File
 
 
@@ -57,5 +58,16 @@ class MainUtils {
         val second = ((Math.abs(degrees) - degree - minute / 60.0) * 3600).toInt()
 
         return "$degree/1,$minute/1,$second/1"
+    }
+    public fun createArrayImages( imageFiles: Array<File>): MutableList<Image> {
+        val images = mutableListOf<Image>()
+        for (file in imageFiles) {
+            if (file.isFile && (file.path.endsWith(".jpg") || file.path.endsWith(".png"))) {
+                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                val uri = Uri.fromFile(file)
+                images.add(Image(bitmap, uri, file.name))
+            }
+        }
+        return images
     }
 }

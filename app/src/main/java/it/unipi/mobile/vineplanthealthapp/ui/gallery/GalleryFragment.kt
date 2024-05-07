@@ -32,6 +32,7 @@ import androidx.fragment.app.Fragment
 import it.unipi.mobile.vineplanthealthapp.R
 import it.unipi.mobile.vineplanthealthapp.utils.GalleryUtils
 import it.unipi.mobile.vineplanthealthapp.utils.LocationUtils
+import it.unipi.mobile.vineplanthealthapp.utils.MainUtils
 import java.io.File
 
 
@@ -40,6 +41,7 @@ class GalleryFragment : Fragment() {
     private lateinit var galleryGridView: GridView
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var galleryUtils : GalleryUtils
+    private var mainUtils: MainUtils = MainUtils()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -133,18 +135,12 @@ class GalleryFragment : Fragment() {
     }
 
     private fun loadImages() {
-        val images = mutableListOf<Image>()
+        var images = mutableListOf<Image>()
         val picturesDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
         val imageFiles = picturesDirectory.listFiles()
 
         if (imageFiles != null) {
-            for (file in imageFiles) {
-                if (file.isFile && (file.path.endsWith(".jpg") || file.path.endsWith(".png"))) {
-                    val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-                    val uri = Uri.fromFile(file)
-                    images.add(Image(bitmap, uri, file.name))
-                }
-            }
+            images = mainUtils.createArrayImages(imageFiles)
         }else{
             Toast.makeText(requireContext(), "No images found", Toast.LENGTH_SHORT).show()
         }
