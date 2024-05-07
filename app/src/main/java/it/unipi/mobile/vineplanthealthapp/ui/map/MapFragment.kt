@@ -1,8 +1,8 @@
 package it.unipi.mobile.vineplanthealthapp.ui.map
 
 import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -23,8 +23,12 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import it.unipi.mobile.vineplanthealthapp.databinding.FragmentMapBinding
+import it.unipi.mobile.vineplanthealthapp.ui.gallery.Image
+import it.unipi.mobile.vineplanthealthapp.utils.GalleryUtils
 import it.unipi.mobile.vineplanthealthapp.utils.LocationUtils
+import it.unipi.mobile.vineplanthealthapp.utils.MainUtils
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.overlay.Marker
 
 class MapFragment : Fragment(), MapListener {
     private lateinit var mMap: MapView
@@ -33,6 +37,9 @@ class MapFragment : Fragment(), MapListener {
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<Array<String>>
     private var _binding: FragmentMapBinding? = null
     private lateinit var locationUtils: LocationUtils
+    private val mainUtils = MainUtils()
+    private val galleryUtils = GalleryUtils()
+
     private val binding get() = _binding!!
     val centroItalia = GeoPoint(42.8333, 12.8333, 53.0)
     var zoomItalia = 7.0
@@ -52,6 +59,7 @@ class MapFragment : Fragment(), MapListener {
         mMap = binding.osmmap
         mMap.setTileSource(TileSourceFactory.MAPNIK)
         mMap.minZoomLevel = 5.0
+        mMap.maxZoomLevel = 21.5
         mMap.setMultiTouchControls(true)
         mMyLocationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(requireContext()), mMap)
         controller = mMap.controller
@@ -102,26 +110,65 @@ class MapFragment : Fragment(), MapListener {
 
         goToPosition()
     }
-    private fun goToPosition() {
-        var entrato = false
+    private fun goToPosition(){
         if(!locationUtils.isLocationEnabled()) {
             Log.e("TAG", "gps non attivo")
             controller.setCenter(centroItalia)
             controller.setZoom(zoomItalia)
-            entrato = true
         }
         else {
             mMyLocationOverlay.enableMyLocation()
             mMyLocationOverlay.enableFollowLocation()
         }
-        Log.e("TAG", "entrato: $entrato")
+
+        var images = mutableListOf<Image>()
+        val picturesDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+        val imageFiles = picturesDirectory.listFiles()
+
+        if (imageFiles != null) {
+            images = mainUtils.createArrayImages(imageFiles)
+            Log.e("TAG", "images: $images")
+        }
+
+        val markerMap = mutableMapOf<GeoPoint, Image>()
+        for (image in images) {
+            val imagePath = image.uri.path
+            val geoLocation  = galleryUtils.getGeoLocation(imagePath!!)
+            val timestamp = galleryUtils.getTimestamp(imagePath)
+
+            if(geoLocation == null || timestamp == null) {
+                continue
+            }
+
+            val geoPoint = GeoPoint(geoLocation.first, geoLocation.second)
+
+            // Check if a marker already exists at this location
+            if (markerMap.containsKey(geoPoint)) {
+                // If the existing marker is older, replace it
+                if (galleryUtils.getTimestamp(markerMap[geoPoint]!!.uri.path!!)!! < timestamp) {
+                    markerMap[geoPoint] = image
+                }
+            } else {
+                // If no marker exists at this location, add a new one
+                markerMap[geoPoint] = image
+            }
+        }
+
+        // Now add the markers to the map
+        for ((geoPoint, image) in markerMap) {
+            val marker = Marker(mMap)
+            marker.position = geoPoint
+            marker.icon = resources.getDrawable(R.drawable.ic_map_marker, null)
+            marker.title = image.name
+            mMap.overlays.add(marker)
+        }
 
         // La posizione non è ancora disponibile, aspetta che lo diventi
         mMyLocationOverlay.runOnFirstFix {
             activity?.runOnUiThread {
                 controller.setCenter(mMyLocationOverlay.myLocation)
                 controller.animateTo(mMyLocationOverlay.myLocation)
-                controller.setZoom(15.0)
+                controller.setZoom(18.5)
             }
         }
         mMap.overlays.add(mMyLocationOverlay)
@@ -147,6 +194,7 @@ class MapFragment : Fragment(), MapListener {
         super.onDestroyView()
         // mostro il pulsante di email
         activity?.findViewById<FloatingActionButton>(R.id.fab)?.show()
+        mMap.overlays.clear()
         _binding = null
     }
 
@@ -155,6 +203,7 @@ class MapFragment : Fragment(), MapListener {
     }
 
     override fun onZoom(event: ZoomEvent?): Boolean {
+        Log.e("TAG", "onZoom: ${event?.zoomLevel}")
         return false
     }
 }

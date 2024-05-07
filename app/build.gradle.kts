@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
     implementation(libs.play.services.location)
     implementation(libs.tensorflow.tensorflow.lite.support)
     testImplementation(libs.junit)
