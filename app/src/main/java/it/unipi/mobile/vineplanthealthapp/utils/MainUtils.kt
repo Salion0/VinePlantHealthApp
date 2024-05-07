@@ -9,6 +9,9 @@ import android.graphics.BitmapFactory
 import android.media.ExifInterface
 import android.os.Environment
 import it.unipi.mobile.vineplanthealthapp.ui.gallery.Image
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.Date
 import java.io.File
 
 
@@ -34,10 +37,20 @@ class MainUtils {
 
             val file = File(getRealPathFromURI(contentResolver, uri))
             val exifInterface = ExifInterface(file.absolutePath)
+
+            // Set GPS location
             exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE, convertToExifFormat(latitude))
             exifInterface.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, if (latitude >= 0) "N" else "S")
             exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, convertToExifFormat(longitude))
             exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, if (longitude >= 0) "E" else "W")
+
+            //set timestamp
+            // Aggiungi il timestamp
+            val timestamp = System.currentTimeMillis()
+            val dateFormat = SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault())
+            val dateTimeString = dateFormat.format(Date(timestamp))
+            exifInterface.setAttribute(ExifInterface.TAG_DATETIME, dateTimeString)
+
             exifInterface.saveAttributes()
         }
     }

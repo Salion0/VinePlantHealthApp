@@ -5,7 +5,6 @@ import android.app.Dialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
@@ -34,6 +33,7 @@ import it.unipi.mobile.vineplanthealthapp.utils.GalleryUtils
 import it.unipi.mobile.vineplanthealthapp.utils.LocationUtils
 import it.unipi.mobile.vineplanthealthapp.utils.MainUtils
 import java.io.File
+import java.sql.Timestamp
 
 
 class GalleryFragment : Fragment() {
@@ -269,6 +269,7 @@ data class Image(
     val bitmap: Bitmap,
     val uri: Uri,
     var name: String? = null,
+    var timestamp: Timestamp? = null,
     var plantStatus: String? = null
 )
 

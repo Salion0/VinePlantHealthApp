@@ -1,6 +1,7 @@
 package it.unipi.mobile.vineplanthealthapp
 
 import android.Manifest
+import android.app.ProgressDialog
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.Menu
@@ -25,7 +26,10 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.content.Context
+import it.unipi.mobile.vineplanthealthapp.utils.LocationUtils
 import it.unipi.mobile.vineplanthealthapp.utils.MainUtils
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 class MainActivity : AppCompatActivity() {
 
@@ -47,8 +51,13 @@ class MainActivity : AppCompatActivity() {
     private var currentLocation: Location? = null
     private var takePictureLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
-            Toast.makeText(this, "Image captured successful", Toast.LENGTH_SHORT).show()
-            mainUtils.saveImage(contentResolver, imageUri, currentLocation?.latitude ?: 0.0, currentLocation?.longitude ?: 0.0)
+            getGPSLocation()
+            if(LocationUtils(this).isLocationEnabled() && currentLocation == null)
+                Toast.makeText(this, "Location info not retrieved. Try again.", Toast.LENGTH_SHORT).show()
+            else{
+                mainUtils.saveImage(contentResolver, imageUri, currentLocation?.latitude ?: 0.0, currentLocation?.longitude ?: 0.0)
+                Toast.makeText(this, "Image captured successful", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -63,24 +72,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.appBarMain.fab.setOnClickListener {
             Log.i("TAG", "Camera button clicked")
-
             locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
-            try {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10f, object : LocationListener {
-                    override fun onLocationChanged(location: Location) {
-                        currentLocation = location
-                    }
-                    override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {}
-                    override fun onProviderEnabled(provider: String) {}
-                    override fun onProviderDisabled(provider: String) {
-                        Toast.makeText(this@MainActivity, "GPS is disabled", Toast.LENGTH_SHORT).show()
-                    }
-                })
-            } catch (e: SecurityException) {
-                e.printStackTrace()
-            }
-
             manageCameraPermissions()
         }
 
@@ -109,18 +101,18 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
-    fun manageCameraPermissions(){
+    private fun manageCameraPermissions(){
         if(hasCameraPermissions()){
             Log.d("TAG", "Camera permissions OK")
             manageCameraButton()
         } else {
-            Log.d("TAG", "Requesting camera permissions")
-            requestPermissions()
+            Log.d("TAG", "Requesting camera and location permissions")
+            requestAllPermissions()
         }
 
     }
 
-    fun manageCameraButton(){
+    private fun manageCameraButton(){
         val imageFile = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "new_image.jpg")
         imageUri = FileProvider.getUriForFile(
             this,
@@ -129,12 +121,13 @@ class MainActivity : AppCompatActivity() {
         takePictureLauncher.launch(imageUri)
     }
 
-    private fun requestPermissions() {
+    private fun requestAllPermissions() {
         val permissions = arrayOf(
             Manifest.permission.READ_MEDIA_IMAGES,
             Manifest.permission.ACCESS_MEDIA_LOCATION,
             Manifest.permission.CAMERA,
-            Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
         )
         requestPermissionLauncher.launch(permissions)
     }
@@ -143,11 +136,38 @@ class MainActivity : AppCompatActivity() {
         return arrayOf(
             Manifest.permission.READ_MEDIA_IMAGES,
             Manifest.permission.ACCESS_MEDIA_LOCATION,
-            Manifest.permission.CAMERA,
-            Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.CAMERA
         ).all {
             ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
+    }
+
+
+    private fun getGPSLocation(){
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            Toast.makeText(this, "Location permissions not granted", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if(!LocationUtils(this).isLocationEnabled()){
+            Toast.makeText(this, "Location not enabled", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0f, object : LocationListener {
+            override fun onLocationChanged(location: Location) {
+                currentLocation = location
+            }
+            override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {}
+            override fun onProviderEnabled(provider: String) {
+                if(ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+                    currentLocation = locationManager.getLastKnownLocation(provider)
+            }
+            override fun onProviderDisabled(provider: String) {
+                currentLocation = null
+            }
+         })
     }
 
 }

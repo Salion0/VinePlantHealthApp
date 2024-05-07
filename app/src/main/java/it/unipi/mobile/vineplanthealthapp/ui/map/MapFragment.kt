@@ -1,7 +1,6 @@
 package it.unipi.mobile.vineplanthealthapp.ui.map
 
 import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
@@ -111,7 +110,7 @@ class MapFragment : Fragment(), MapListener {
 
         goToPosition()
     }
-    private fun goToPosition() {
+    private fun goToPosition(){
         if(!locationUtils.isLocationEnabled()) {
             Log.e("TAG", "gps non attivo")
             controller.setCenter(centroItalia)
@@ -131,24 +130,38 @@ class MapFragment : Fragment(), MapListener {
             Log.e("TAG", "images: $images")
         }
 
-        // aggiungo i marker dalla galleria
+        val markerMap = mutableMapOf<GeoPoint, Image>()
         for (image in images) {
-            val marker = Marker(mMap)
             val imagePath = image.uri.path
-            Log.e("TAG", "imagePath: $imagePath")
             val geoLocation  = galleryUtils.getGeoLocation(imagePath!!)
-            if(geoLocation == null) {
-                Log.e("TAG", "continue:")
+            val timestamp = galleryUtils.getTimestamp(imagePath)
+
+            if(geoLocation == null || timestamp == null) {
                 continue
             }
-            Log.e("TAG", "geolocation: $geoLocation")
 
-            marker.position = GeoPoint(geoLocation.first, geoLocation.second)
-            marker.icon = resources.getDrawable(R.drawable.ic_map_marker, null)
-            marker.title = image.name // supponendo che Image abbia un campo name
-            mMap.overlays.add(marker)
+            val geoPoint = GeoPoint(geoLocation.first, geoLocation.second)
+
+            // Check if a marker already exists at this location
+            if (markerMap.containsKey(geoPoint)) {
+                // If the existing marker is older, replace it
+                if (galleryUtils.getTimestamp(markerMap[geoPoint]!!.uri.path!!)!! < timestamp) {
+                    markerMap[geoPoint] = image
+                }
+            } else {
+                // If no marker exists at this location, add a new one
+                markerMap[geoPoint] = image
+            }
         }
 
+        // Now add the markers to the map
+        for ((geoPoint, image) in markerMap) {
+            val marker = Marker(mMap)
+            marker.position = geoPoint
+            marker.icon = resources.getDrawable(R.drawable.ic_map_marker, null)
+            marker.title = image.name
+            mMap.overlays.add(marker)
+        }
 
         // La posizione non è ancora disponibile, aspetta che lo diventi
         mMyLocationOverlay.runOnFirstFix {
@@ -181,6 +194,7 @@ class MapFragment : Fragment(), MapListener {
         super.onDestroyView()
         // mostro il pulsante di email
         activity?.findViewById<FloatingActionButton>(R.id.fab)?.show()
+        mMap.overlays.clear()
         _binding = null
     }
 
