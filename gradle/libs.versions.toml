@@ -13,6 +13,8 @@ lifecycleViewmodelKtx = "2.7.0"
 navigationFragmentKtx = "2.7.7"
 navigationUiKtx = "2.7.7"
 playServicesLocation = "21.2.0"
+hadoop = "1.10.0"
+tensorflowLiteSupport = "0.4.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -27,6 +29,10 @@ androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifec
 androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
 androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigationUiKtx" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+tensorflow-lite-support = { group = "org.tensorflow", name = "tensorflow-lite-support" }
+tensorflow-lite-metadata = { group = "org.tensorflow", name = "tensorflow-lite-metadata"}
+hadoop = { group = "org.tensorflow", name = "hadoop", version.ref = "hadoop" }
+tensorflow-tensorflow-lite-support = { group = "org.tensorflow", name = "tensorflow-lite-support", version.ref = "tensorflowLiteSupport" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
