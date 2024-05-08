@@ -208,18 +208,19 @@ class GalleryFragment : Fragment() {
 
         //aggiungere if per controllo stato pianta
         val plantStatus = dialog.findViewById<TextView>(R.id.plantStatus)
-        plantStatus.text = "HEALTHY"
+        plantStatus.text = getString(R.string.status_healthy)
         plantStatus.setTextColor(Color.GREEN)
 
         val lat = dialog.findViewById<TextView>(R.id.lat)
         val lon = dialog.findViewById<TextView>(R.id.lon)
         if(geoLocation == null){
-            lat.text = "Lat: Not available"
-            lon.text = "Lon: Not available"
+            val notAvailableLabel = getString(R.string.label_not_available)
+            lat.text = getString(R.string.label_lat).plus(notAvailableLabel)
+            lon.text = getString(R.string.label_lon).plus(notAvailableLabel)
         }
         else{
-            lat.text = "Lat: ${geoLocation.first}"
-            lon.text = "Lon: ${geoLocation.second}"
+            lat.text = getString(R.string.label_lat).plus("${geoLocation.first}")
+            lon.text = getString(R.string.label_lon).plus("${geoLocation.second}")
         }
 
         val closeButton = dialog.findViewById<ImageButton>(R.id.closeButton)
