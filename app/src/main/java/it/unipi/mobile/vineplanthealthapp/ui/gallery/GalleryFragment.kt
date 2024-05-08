@@ -3,6 +3,7 @@ package it.unipi.mobile.vineplanthealthapp.ui.gallery
 import android.Manifest
 import android.app.Dialog
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -16,21 +17,21 @@ import android.view.ViewGroup
 import android.view.Window
 import android.widget.BaseAdapter
 import android.widget.Button
+import android.widget.EditText
 import android.widget.GridView
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
+import it.unipi.mobile.vineplanthealthapp.Config
+import it.unipi.mobile.vineplanthealthapp.InferencePhaseActivity
 import it.unipi.mobile.vineplanthealthapp.R
 import it.unipi.mobile.vineplanthealthapp.utils.GalleryUtils
-import it.unipi.mobile.vineplanthealthapp.utils.LocationUtils
 import it.unipi.mobile.vineplanthealthapp.utils.MainUtils
 import java.io.File
 import java.sql.Timestamp
@@ -206,7 +207,7 @@ class GalleryFragment : Fragment() {
             galleryUtils.setEditable(imageName, saveButton, revertButton,editButton)
         }
 
-        //aggiungere if per controllo stato pianta
+        //TODO aggiungere if per controllo stato pianta
         val plantStatus = dialog.findViewById<TextView>(R.id.plantStatus)
         plantStatus.text = "HEALTHY"
         plantStatus.setTextColor(Color.GREEN)
@@ -229,7 +230,7 @@ class GalleryFragment : Fragment() {
 
         val classifyButton = dialog.findViewById<Button>(R.id.classifyButton)
         classifyButton.setOnClickListener {
-            classify()
+            classify(image)
         }
 
         //open dialog to confirm deletion
@@ -260,8 +261,11 @@ class GalleryFragment : Fragment() {
         dialog.show()
     }
 
-    fun classify(){
-        Toast.makeText(requireContext(), "Classify", Toast.LENGTH_SHORT).show()
+    private fun classify(image:Image){
+        //Toast.makeText(requireContext(), "Classify", Toast.LENGTH_SHORT).show()
+        val intent: Intent = Intent(context,InferencePhaseActivity::class.java)
+        intent.putExtra(Config.URI_TAG, image.uri.toString())
+        startActivity(intent)
     }
 }
 

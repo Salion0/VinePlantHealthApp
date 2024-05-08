@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import it.unipi.mobile.vineplanthealthapp.ml.Cropnet
@@ -20,9 +21,12 @@ class InferencePhaseActivity : AppCompatActivity() {
     //<PATH>,"path-to-the-img-file"
     //<BYTE>,ByteArray of the image
 
-     //TODO change this to implement the specific model, this is a placeholder to test the app
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<Array<String>>
+
+    //TODO change this to implement the specific model, this is a placeholder to test the app
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.inference_results)
        if (intent != null) {
            //get data images from intent
            try {
@@ -30,7 +34,7 @@ class InferencePhaseActivity : AppCompatActivity() {
                val tensorImage: TensorImage = getTensorFromExtras(extras)
                val labelRes:String = classify(tensorImage)
 
-               val imageView: ImageView = findViewById(R.id.classifiedImg)
+               val imageView: ImageView = findViewById(R.id.classifiedImg)!!
                imageView.setImageBitmap(tensorImage.bitmap)
                val labelView = findViewById<TextView>(R.id.label)
                labelView.text = labelRes
@@ -56,7 +60,6 @@ class InferencePhaseActivity : AppCompatActivity() {
         //Intent extras can contain image data in different forms
         //It can contain a Path,URI ecc.
         var tensorImage:TensorImage = TensorImage(Config.MODEL_INPUT_DATA_TYPE)
-
         if (extras.keySet().size == 1){
             when(val tag : String = extras.keySet().first())
             {
@@ -68,9 +71,9 @@ class InferencePhaseActivity : AppCompatActivity() {
                     catch (e : Exception) {
                         Log.e("ImageTensorLoading","Error in decoding and loading file:\n ${e.printStackTrace()}")
                     }
+
                 }
                 Config.URI_TAG -> {
-                    //TODO
                     val uri:Uri= extras.getString(Config.URI_TAG)!!.toUri()
                     val bitmap:Bitmap = BitmapFactory.decodeFile(uri.path)
                     tensorImage.load(bitmap)
@@ -85,5 +88,6 @@ class InferencePhaseActivity : AppCompatActivity() {
         }
         return tensorImage
     }
+
 
 }
