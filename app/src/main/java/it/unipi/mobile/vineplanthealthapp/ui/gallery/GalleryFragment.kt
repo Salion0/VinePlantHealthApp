@@ -6,7 +6,9 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Path
 import android.graphics.drawable.ColorDrawable
+import android.media.ExifInterface
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -147,7 +149,7 @@ class GalleryFragment : Fragment() {
 
         galleryGridView.setOnItemClickListener { parent, view, position, id ->
             val image = galleryGridView.adapter.getItem(position) as Image
-            image.plantStatus = "Healthy"
+            image.plantStatus = galleryUtils.getPlantStatus(requireContext(), image.uri.path?:"")
             try {
                 val geoLocation = galleryUtils.getGeoLocation(image.uri.path?:"")
                 showImageDialog(image, geoLocation)
@@ -208,8 +210,8 @@ class GalleryFragment : Fragment() {
 
         //aggiungere if per controllo stato pianta
         val plantStatus = dialog.findViewById<TextView>(R.id.plantStatus)
-        plantStatus.text = getString(R.string.status_healthy)
-        plantStatus.setTextColor(Color.GREEN)
+        plantStatus.text = image.plantStatus
+        galleryUtils.setPlantStatusTextColor(image.plantStatus?:"", plantStatus)
 
         val lat = dialog.findViewById<TextView>(R.id.lat)
         val lon = dialog.findViewById<TextView>(R.id.lon)
@@ -230,7 +232,7 @@ class GalleryFragment : Fragment() {
 
         val classifyButton = dialog.findViewById<Button>(R.id.classifyButton)
         classifyButton.setOnClickListener {
-            classify()
+            classify(image, plantStatus)
         }
 
         //open dialog to confirm deletion
@@ -261,8 +263,29 @@ class GalleryFragment : Fragment() {
         dialog.show()
     }
 
-    fun classify(){
-        Toast.makeText(requireContext(), "Classify", Toast.LENGTH_SHORT).show()
+    private fun classify(image: Image, plantStatus: TextView){
+        if(image.uri.path == null){
+            Toast.makeText(requireContext(), "Image not found", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        //loading text
+        plantStatus.text = "..."
+        plantStatus.setTextColor(Color.BLACK)
+
+        //classify image
+        //TODO implement classification
+        val res = getString(R.string.plant_status_healthy) //example
+
+        //save result
+        val exifInterface = ExifInterface(image.uri.path!!)
+        exifInterface.setAttribute(getString(R.string.plant_status_tag), res)
+        exifInterface.saveAttributes()
+
+        //set text color
+        plantStatus.text = res
+        galleryUtils.setPlantStatusTextColor(res, plantStatus)
+
     }
 }
 
