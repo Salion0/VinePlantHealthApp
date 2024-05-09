@@ -44,6 +44,7 @@ class GalleryFragment : Fragment() {
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var galleryUtils : GalleryUtils
     private var mainUtils: MainUtils = MainUtils()
+    private var imagesList: MutableList<Image> = ArrayList()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -60,9 +61,6 @@ class GalleryFragment : Fragment() {
                 if (!granted) {
                     showPermissionToast()
                     parentFragmentManager.popBackStack()
-                }
-                else {
-                    loadImages()
                 }
             }
 
@@ -126,25 +124,26 @@ class GalleryFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        if (hasPermissions()) {
+        if (hasPermissions() && imagesList.isEmpty()) {
             loadImages()
         }
     }
 
     override fun onPause() {
         super.onPause()
-        galleryGridView.adapter = null
+        imagesList.clear()
     }
 
     private fun loadImages() {
-        var images = mutableListOf<Image>()
         val picturesDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
         val imageFiles = picturesDirectory.listFiles()
 
-        if (imageFiles != null) {
-            images = mainUtils.createArrayImages(imageFiles)
+        if (imageFiles != null && imageFiles.isNotEmpty()) {
+            imagesList = mainUtils.createArrayImages(imageFiles)
+            if(imagesList.size == 0)
+                Toast.makeText(requireContext(), "No images found", Toast.LENGTH_SHORT).show()
         }else{
-            Toast.makeText(requireContext(), "No images found", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "No files found", Toast.LENGTH_SHORT).show()
         }
 
         galleryGridView.setOnItemClickListener { parent, view, position, id ->
@@ -158,7 +157,7 @@ class GalleryFragment : Fragment() {
             }
         }
 
-        val imageAdapter = ImageAdapter(requireContext(), images)
+        val imageAdapter = ImageAdapter(requireContext(), imagesList)
         galleryGridView.adapter = imageAdapter
     }
 
