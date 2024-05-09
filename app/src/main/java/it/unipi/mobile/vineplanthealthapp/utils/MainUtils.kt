@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.ExifInterface
 import android.os.Environment
+import android.util.Log
 import it.unipi.mobile.vineplanthealthapp.ui.gallery.Image
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -81,7 +82,13 @@ class MainUtils{
             if (file.isFile && (file.path.endsWith(".jpg") || file.path.endsWith(".png"))) {
                 val bitmap = BitmapFactory.decodeFile(file.absolutePath)
                 val uri = Uri.fromFile(file)
-                images.add(Image(bitmap, uri, file.name))
+                try {
+                    images.add(Image(bitmap, uri, file.name))
+                }
+                catch (e: Exception) {
+                    Log.e("Image Add Error", e.printStackTrace().toString())
+                    continue;
+                }
             }
         }
         return images
