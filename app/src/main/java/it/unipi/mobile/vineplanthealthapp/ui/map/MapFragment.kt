@@ -43,12 +43,14 @@ class MapFragment : Fragment(), MapListener {
     private val binding get() = _binding!!
     val centroItalia = GeoPoint(42.8333, 12.8333, 53.0)
     var zoomItalia = 7.0
+    private var isFirstViewCreation = true
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentMapBinding.inflate(inflater, container, false)
+        isFirstViewCreation = true
         return binding.root
     }
 
@@ -139,7 +141,6 @@ class MapFragment : Fragment(), MapListener {
             if(geoLocation == null || timestamp == null) {
                 continue
             }
-
             val geoPoint = GeoPoint(geoLocation.first, geoLocation.second)
 
             // Check if a marker already exists at this location
@@ -157,9 +158,11 @@ class MapFragment : Fragment(), MapListener {
         // Now add the markers to the map
         for ((geoPoint, image) in markerMap) {
             val marker = Marker(mMap)
+            val timestamp = galleryUtils.getTimestamp(image.uri.path!!)
+            val plantStatus = galleryUtils.getPlantStatus(requireContext(), image.uri.path!!)
             marker.position = geoPoint
             marker.icon = resources.getDrawable(R.drawable.ic_map_marker, null)
-            marker.title = image.name
+            marker.title = "${image.name}\n${timestamp}\n${plantStatus}"
             mMap.overlays.add(marker)
         }
 
@@ -187,7 +190,11 @@ class MapFragment : Fragment(), MapListener {
     override fun onResume() {
         super.onResume()
         Log.e("TAG", "onresume")
-        goToPosition()
+        if (!isFirstViewCreation) {
+            goToPosition()
+        } else {
+            isFirstViewCreation = false
+        }
     }
 
     override fun onDestroyView() {
