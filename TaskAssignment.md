@@ -11,3 +11,14 @@
   - Camera permissions management
   - Image saving (with position and timestamp info)
 - Managed string.xml file and app logo   
+
+### Antonino Patania
+- Map fragment
+  - Use of OpenStreetMap
+  - Use of osmdroid
+  - Location permissions management
+  - Read images from the gallery and as many markers as there are geolocated images
+- Location utils
+  - Position utility functions
+- Managed string.xml
+- Added map and marker vectors
