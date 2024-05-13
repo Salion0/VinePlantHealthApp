@@ -217,7 +217,7 @@ class GalleryFragment : Fragment() {
         if(geoLocation == null){
             lat.text = "Lat: Not available"
             lon.text = "Lon: Not available"
-        }
+        }       
         else{
             lat.text = "Lat: ${geoLocation.first}"
             lon.text = "Lon: ${geoLocation.second}"

@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
-import it.unipi.mobile.vineplanthealthapp.ml.Cropnet
+import it.unipi.mobile.vineplanthealthapp.ml.Model
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.image.ops.ResizeOp
@@ -23,7 +23,6 @@ class InferencePhaseActivity : AppCompatActivity() {
 
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<Array<String>>
 
-    //TODO change this to implement the specific model, this is a placeholder to test the app
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.inference_results)
@@ -48,10 +47,14 @@ class InferencePhaseActivity : AppCompatActivity() {
        }
     }
     private fun classify(tensorImage: TensorImage):String{
-        val model:Cropnet = Cropnet.newInstance(baseContext)
+        val model:Model = Model.newInstance(baseContext)
         val label:String
-        val results = model.process(tensorImage)
-        label = results.probabilityAsCategoryList.maxBy { it.score }.label
+        val results = model.process(tensorImage.tensorBuffer).outputFeature0AsTensorBuffer.floatArray
+        Log.d("Output Shape","${results.size}")
+        var logValue:String = ""
+        results.forEach { logValue = logValue.plus(" $it ") }
+        Log.d("Output values",logValue)
+        label = Config.LABELS[results.indices.maxBy { results[it] }]
         return label
     }
     private fun getTensorFromExtras(extras:Bundle):TensorImage{
