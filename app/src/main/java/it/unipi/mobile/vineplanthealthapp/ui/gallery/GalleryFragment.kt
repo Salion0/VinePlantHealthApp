@@ -1,13 +1,13 @@
 package it.unipi.mobile.vineplanthealthapp.ui.gallery
 
 import android.Manifest
+import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.Path
 import android.graphics.drawable.ColorDrawable
 import android.media.ExifInterface
 import android.net.Uri
@@ -26,16 +26,15 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
 import it.unipi.mobile.vineplanthealthapp.Config
 import it.unipi.mobile.vineplanthealthapp.InferencePhaseActivity
 import it.unipi.mobile.vineplanthealthapp.R
 import it.unipi.mobile.vineplanthealthapp.utils.GalleryUtils
-import it.unipi.mobile.vineplanthealthapp.utils.LocationUtils
 import it.unipi.mobile.vineplanthealthapp.utils.MainUtils
 import java.io.File
 import java.sql.Timestamp
@@ -45,7 +44,7 @@ class GalleryFragment : Fragment() {
 
     private lateinit var galleryGridView: GridView
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<Array<String>>
-    private lateinit var galleryUtils : GalleryUtils
+    private lateinit var galleryUtils: GalleryUtils
     private var mainUtils: MainUtils = MainUtils()
     private var imagesList: MutableList<Image> = ArrayList()
 
@@ -69,8 +68,7 @@ class GalleryFragment : Fragment() {
 
         if (hasPermissions()) {
             loadImages()
-        }
-        else {
+        } else {
             if (shouldShowRequestPermissionRationale()) {
                 showPermissionToast()
                 parentFragmentManager.popBackStack()
@@ -81,7 +79,6 @@ class GalleryFragment : Fragment() {
 
         return view
     }
-
 
 
     private fun hasPermissions(): Boolean {
@@ -138,24 +135,25 @@ class GalleryFragment : Fragment() {
     }
 
     private fun loadImages() {
-        val picturesDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+        val picturesDirectory =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
         val imageFiles = picturesDirectory.listFiles()
 
         if (imageFiles != null && imageFiles.isNotEmpty()) {
             imagesList = mainUtils.createArrayImages(imageFiles)
-            if(imagesList.size == 0)
+            if (imagesList.size == 0)
                 Toast.makeText(requireContext(), "No images found", Toast.LENGTH_SHORT).show()
-        }else{
+        } else {
             Toast.makeText(requireContext(), "No files found", Toast.LENGTH_SHORT).show()
         }
 
         galleryGridView.setOnItemClickListener { parent, view, position, id ->
             val image = galleryGridView.adapter.getItem(position) as Image
-            image.plantStatus = galleryUtils.getPlantStatus(requireContext(), image.uri.path?:"")
+            image.plantStatus = galleryUtils.getPlantStatus(requireContext(), image.uri.path ?: "")
             try {
-                val geoLocation = galleryUtils.getGeoLocation(image.uri.path?:"")
+                val geoLocation = galleryUtils.getGeoLocation(image.uri.path ?: "")
                 showImageDialog(image, geoLocation)
-            } catch (Exception: Exception){
+            } catch (Exception: Exception) {
                 showImageDialog(image, null)
             }
         }
@@ -166,7 +164,7 @@ class GalleryFragment : Fragment() {
 
 
     //function that open a dialog to show the image in full screen + other
-    private fun showImageDialog(image: Image, geoLocation: Pair<Double, Double> ?) {
+    private fun showImageDialog(image: Image, geoLocation: Pair<Double, Double>?) {
         val dialog = Dialog(requireContext())
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -184,45 +182,44 @@ class GalleryFragment : Fragment() {
 
         revertButton.setOnClickListener {
             imageName.setText(image.name)
-            galleryUtils.setNotEditable(imageName, saveButton, revertButton,editButton)
+            galleryUtils.setNotEditable(imageName, saveButton, revertButton, editButton)
         }
 
         saveButton.setOnClickListener {
             val newName = imageName.text.toString()
-                val file = File(image.uri.path)
-                val newFile = File(file.parent, newName)
-                if(file.renameTo(newFile)){
-                    image.name = newName
-                    imageName.setText(newName)
-                    Toast.makeText(requireContext(), "Image renamed successfully", Toast.LENGTH_SHORT).show()
-                    galleryUtils.setNotEditable(imageName, saveButton, revertButton, editButton)
-                    view.let { activity?.currentFocus?.clearFocus() }
-                    dialog.setOnDismissListener {
-                        loadImages()
-                    }
+            val file = File(image.uri.path)
+            val newFile = File(file.parent, newName)
+            if (file.renameTo(newFile)) {
+                image.name = newName
+                imageName.setText(newName)
+                Toast.makeText(requireContext(), "Image renamed successfully", Toast.LENGTH_SHORT)
+                    .show()
+                galleryUtils.setNotEditable(imageName, saveButton, revertButton, editButton)
+                view.let { activity?.currentFocus?.clearFocus() }
+                dialog.setOnDismissListener {
+                    loadImages()
                 }
-                else{
-                    Toast.makeText(requireContext(), "Invalid image name", Toast.LENGTH_SHORT).show()
-                }
+            } else {
+                Toast.makeText(requireContext(), "Invalid image name", Toast.LENGTH_SHORT).show()
+            }
         }
 
         editButton.setOnClickListener {
-            galleryUtils.setEditable(imageName, saveButton, revertButton,editButton)
+            galleryUtils.setEditable(imageName, saveButton, revertButton, editButton)
         }
 
         //TODO aggiungere if per controllo stato pianta
         val plantStatus = dialog.findViewById<TextView>(R.id.plantStatus)
         plantStatus.text = image.plantStatus
-        galleryUtils.setPlantStatusTextColor(image.plantStatus?:"", plantStatus)
+        galleryUtils.setPlantStatusTextColor(image.plantStatus ?: "", plantStatus)
 
         val lat = dialog.findViewById<TextView>(R.id.lat)
         val lon = dialog.findViewById<TextView>(R.id.lon)
-        if(geoLocation == null){
+        if (geoLocation == null) {
             val notAvailableLabel = getString(R.string.label_not_available)
             lat.text = getString(R.string.label_lat).plus(notAvailableLabel)
             lon.text = getString(R.string.label_lon).plus(notAvailableLabel)
-        }
-        else{
+        } else {
             lat.text = getString(R.string.label_lat).plus("${geoLocation.first}")
             lon.text = getString(R.string.label_lon).plus("${geoLocation.second}")
         }
@@ -234,7 +231,7 @@ class GalleryFragment : Fragment() {
 
         val classifyButton = dialog.findViewById<Button>(R.id.classifyButton)
         classifyButton.setOnClickListener {
-            classify()
+            classify(image, plantStatus)
         }
 
         //open dialog to confirm deletion
@@ -250,7 +247,11 @@ class GalleryFragment : Fragment() {
                 val file = File(image.uri.path)
                 if (file.exists()) {
                     file.delete()
-                    Toast.makeText(requireContext(), "Image deleted successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Image deleted successfully",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     deleteDialog.dismiss()
                     dialog.dismiss()
                     loadImages()
@@ -265,8 +266,8 @@ class GalleryFragment : Fragment() {
         dialog.show()
     }
 
-    private fun classify(image: Image, plantStatus: TextView){
-        if(image.uri.path == null){
+    private fun classify(image: Image, plantStatus: TextView) {
+        if (image.uri.path == null) {
             Toast.makeText(requireContext(), "Image not found", Toast.LENGTH_SHORT).show()
             return
         }
@@ -276,21 +277,38 @@ class GalleryFragment : Fragment() {
         plantStatus.setTextColor(Color.BLACK)
 
         //classify image
-        //TODO implement classification
-        val res = getString(R.string.plant_status_healthy) //example
+        var res = ""
+        val inferenceActivityLauncher = registerForActivityResult(InferenceActivityContract()){
+            label ->  res = label!!
 
-        //save result
-        val exifInterface = ExifInterface(image.uri.path!!)
-        exifInterface.setAttribute(getString(R.string.plant_status_tag), res)
-        exifInterface.saveAttributes()
+            //save result
+            val exifInterface = ExifInterface(image.uri.path!!)
+            exifInterface.setAttribute(getString(R.string.plant_status_tag), res)
+            exifInterface.saveAttributes()
+            //set text color
+            plantStatus.text = res
+            galleryUtils.setPlantStatusTextColor(res, plantStatus)
+        }
+        inferenceActivityLauncher.launch(image.uri.toString())
 
-        //set text color
-        plantStatus.text = res
-        galleryUtils.setPlantStatusTextColor(res, plantStatus)
 
     }
 }
 
+class InferenceActivityContract: ActivityResultContract<String, String?>(){
+    override fun createIntent(context: Context, input: String): Intent {
+            return Intent(context,InferencePhaseActivity::class.java).putExtra(Config.URI_TAG,input)
+    }
+
+    override fun parseResult(resultCode: Int, intent: Intent?): String? {
+        return if(resultCode != Activity.RESULT_OK)
+            null
+        else {
+            intent?.getStringExtra("label")
+        }
+    }
+
+}
 data class Image(
     val bitmap: Bitmap,
     val uri: Uri,

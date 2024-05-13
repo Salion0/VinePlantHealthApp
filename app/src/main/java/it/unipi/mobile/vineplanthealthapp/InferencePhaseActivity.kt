@@ -1,5 +1,6 @@
 package it.unipi.mobile.vineplanthealthapp
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -37,7 +38,8 @@ class InferencePhaseActivity : AppCompatActivity() {
                imageView.setImageBitmap(tensorImage.bitmap)
                val labelView = findViewById<TextView>(R.id.label)
                labelView.text = labelRes
-
+               val resultIntent = Intent()
+               TODO("Implementare l' intent che ritorna i risultati")
 
            }catch(e: Exception){
                Log.e("NoDATA","No data send to the activity.\n${e.printStackTrace()}")
