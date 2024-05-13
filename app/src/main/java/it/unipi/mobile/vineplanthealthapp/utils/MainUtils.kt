@@ -8,14 +8,16 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.ExifInterface
 import android.os.Environment
+import android.util.Log
 import it.unipi.mobile.vineplanthealthapp.ui.gallery.Image
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.Date
 import java.io.File
+import it.unipi.mobile.vineplanthealthapp.R
 
 
-class MainUtils {
+class MainUtils{
 
     fun saveImage(contentResolver: ContentResolver, imageUri: Uri, latitude: Double, longitude: Double){
         val contentValues = ContentValues().apply {
@@ -45,11 +47,13 @@ class MainUtils {
             exifInterface.setAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF, if (longitude >= 0) "E" else "W")
 
             //set timestamp
-            // Aggiungi il timestamp
             val timestamp = System.currentTimeMillis()
             val dateFormat = SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault())
             val dateTimeString = dateFormat.format(Date(timestamp))
             exifInterface.setAttribute(ExifInterface.TAG_DATETIME, dateTimeString)
+
+            //set default plant status
+            exifInterface.setAttribute(R.string.plant_status_tag.toString(), R.string.plant_status_not_classified.toString())
 
             exifInterface.saveAttributes()
         }
@@ -78,7 +82,13 @@ class MainUtils {
             if (file.isFile && (file.path.endsWith(".jpg") || file.path.endsWith(".png"))) {
                 val bitmap = BitmapFactory.decodeFile(file.absolutePath)
                 val uri = Uri.fromFile(file)
-                images.add(Image(bitmap, uri, file.name))
+                try {
+                    images.add(Image(bitmap, uri, file.name))
+                }
+                catch (e: Exception) {
+                    Log.e("Image Add Error", e.printStackTrace().toString())
+                    continue;
+                }
             }
         }
         return images

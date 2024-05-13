@@ -7,7 +7,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Path
 import android.graphics.drawable.ColorDrawable
+import android.media.ExifInterface
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -27,11 +29,13 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
 import it.unipi.mobile.vineplanthealthapp.Config
 import it.unipi.mobile.vineplanthealthapp.InferencePhaseActivity
 import it.unipi.mobile.vineplanthealthapp.R
 import it.unipi.mobile.vineplanthealthapp.utils.GalleryUtils
+import it.unipi.mobile.vineplanthealthapp.utils.LocationUtils
 import it.unipi.mobile.vineplanthealthapp.utils.MainUtils
 import java.io.File
 import java.sql.Timestamp
@@ -43,6 +47,7 @@ class GalleryFragment : Fragment() {
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var galleryUtils : GalleryUtils
     private var mainUtils: MainUtils = MainUtils()
+    private var imagesList: MutableList<Image> = ArrayList()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,9 +64,6 @@ class GalleryFragment : Fragment() {
                 if (!granted) {
                     showPermissionToast()
                     parentFragmentManager.popBackStack()
-                }
-                else {
-                    loadImages()
                 }
             }
 
@@ -125,30 +127,31 @@ class GalleryFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        if (hasPermissions()) {
+        if (hasPermissions() && imagesList.isEmpty()) {
             loadImages()
         }
     }
 
     override fun onPause() {
         super.onPause()
-        galleryGridView.adapter = null
+        imagesList.clear()
     }
 
     private fun loadImages() {
-        var images = mutableListOf<Image>()
         val picturesDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
         val imageFiles = picturesDirectory.listFiles()
 
-        if (imageFiles != null) {
-            images = mainUtils.createArrayImages(imageFiles)
+        if (imageFiles != null && imageFiles.isNotEmpty()) {
+            imagesList = mainUtils.createArrayImages(imageFiles)
+            if(imagesList.size == 0)
+                Toast.makeText(requireContext(), "No images found", Toast.LENGTH_SHORT).show()
         }else{
-            Toast.makeText(requireContext(), "No images found", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "No files found", Toast.LENGTH_SHORT).show()
         }
 
         galleryGridView.setOnItemClickListener { parent, view, position, id ->
             val image = galleryGridView.adapter.getItem(position) as Image
-            image.plantStatus = "Healthy"
+            image.plantStatus = galleryUtils.getPlantStatus(requireContext(), image.uri.path?:"")
             try {
                 val geoLocation = galleryUtils.getGeoLocation(image.uri.path?:"")
                 showImageDialog(image, geoLocation)
@@ -157,7 +160,7 @@ class GalleryFragment : Fragment() {
             }
         }
 
-        val imageAdapter = ImageAdapter(requireContext(), images)
+        val imageAdapter = ImageAdapter(requireContext(), imagesList)
         galleryGridView.adapter = imageAdapter
     }
 
@@ -209,18 +212,19 @@ class GalleryFragment : Fragment() {
 
         //TODO aggiungere if per controllo stato pianta
         val plantStatus = dialog.findViewById<TextView>(R.id.plantStatus)
-        plantStatus.text = "HEALTHY"
-        plantStatus.setTextColor(Color.GREEN)
+        plantStatus.text = image.plantStatus
+        galleryUtils.setPlantStatusTextColor(image.plantStatus?:"", plantStatus)
 
         val lat = dialog.findViewById<TextView>(R.id.lat)
         val lon = dialog.findViewById<TextView>(R.id.lon)
         if(geoLocation == null){
-            lat.text = "Lat: Not available"
-            lon.text = "Lon: Not available"
-        }       
+            val notAvailableLabel = getString(R.string.label_not_available)
+            lat.text = getString(R.string.label_lat).plus(notAvailableLabel)
+            lon.text = getString(R.string.label_lon).plus(notAvailableLabel)
+        }
         else{
-            lat.text = "Lat: ${geoLocation.first}"
-            lon.text = "Lon: ${geoLocation.second}"
+            lat.text = getString(R.string.label_lat).plus("${geoLocation.first}")
+            lon.text = getString(R.string.label_lon).plus("${geoLocation.second}")
         }
 
         val closeButton = dialog.findViewById<ImageButton>(R.id.closeButton)
@@ -230,7 +234,7 @@ class GalleryFragment : Fragment() {
 
         val classifyButton = dialog.findViewById<Button>(R.id.classifyButton)
         classifyButton.setOnClickListener {
-            classify(image)
+            classify()
         }
 
         //open dialog to confirm deletion
@@ -261,11 +265,29 @@ class GalleryFragment : Fragment() {
         dialog.show()
     }
 
-    private fun classify(image:Image){
-        //Toast.makeText(requireContext(), "Classify", Toast.LENGTH_SHORT).show()
-        val intent: Intent = Intent(context,InferencePhaseActivity::class.java)
-        intent.putExtra(Config.URI_TAG, image.uri.toString())
-        startActivity(intent)
+    private fun classify(image: Image, plantStatus: TextView){
+        if(image.uri.path == null){
+            Toast.makeText(requireContext(), "Image not found", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        //loading text
+        plantStatus.text = "..."
+        plantStatus.setTextColor(Color.BLACK)
+
+        //classify image
+        //TODO implement classification
+        val res = getString(R.string.plant_status_healthy) //example
+
+        //save result
+        val exifInterface = ExifInterface(image.uri.path!!)
+        exifInterface.setAttribute(getString(R.string.plant_status_tag), res)
+        exifInterface.saveAttributes()
+
+        //set text color
+        plantStatus.text = res
+        galleryUtils.setPlantStatusTextColor(res, plantStatus)
+
     }
 }
 

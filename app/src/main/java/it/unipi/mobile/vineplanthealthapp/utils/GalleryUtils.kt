@@ -6,8 +6,13 @@ import android.widget.ImageButton
 import androidx.exifinterface.media.ExifInterface
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import android.content.Context
+import android.graphics.Color
+import android.widget.TextView
+import android.widget.Toast
+import it.unipi.mobile.vineplanthealthapp.R
 
-class GalleryUtils {
+class GalleryUtils(){
 
     public fun setEditable(imageName: EditText , saveButton: ImageButton, revertButton:ImageButton, editButton:ImageButton) {
         saveButton.setVisibility(View.VISIBLE);
@@ -45,6 +50,22 @@ class GalleryUtils {
         return timestamp?.let {
             val formatter = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")
             LocalDateTime.parse(it, formatter)
+        }
+    }
+
+    public fun getPlantStatus(context: Context, imagePath: String): String?{
+        val exifInterface = ExifInterface(imagePath)
+        return exifInterface.getAttribute(context.getString(R.string.plant_status_tag)) ?: context.getString(R.string.plant_status_not_classified)
+    }
+
+    public fun setPlantStatusTextColor(res: String, plantStatus: TextView){
+        if(res == plantStatus.context.getString(R.string.plant_status_healthy)){
+            Toast.makeText(plantStatus.context, "Healthy", Toast.LENGTH_SHORT).show()
+            plantStatus.setTextColor(Color.GREEN)
+        } else if(res == plantStatus.context.getString(R.string.plant_status_sick)){
+            plantStatus.setTextColor(Color.RED)
+        } else {
+            plantStatus.setTextColor(Color.BLACK)
         }
     }
 }
