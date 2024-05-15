@@ -11,8 +11,10 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.media.ExifInterface
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,8 +30,10 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import it.unipi.mobile.vineplanthealthapp.Config
 import it.unipi.mobile.vineplanthealthapp.InferencePhaseActivity
@@ -47,7 +51,9 @@ class GalleryFragment : Fragment() {
     private lateinit var galleryUtils: GalleryUtils
     private var mainUtils: MainUtils = MainUtils()
     private var imagesList: MutableList<Image> = ArrayList()
+    private lateinit var inferenceActivityLauncher : ActivityResultLauncher<String>
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -59,12 +65,29 @@ class GalleryFragment : Fragment() {
 
         requestPermissionLauncher =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-                val granted = permissions.entries.all { it.value }
+                val granted = permissions.entries.all {
+                    Log.d("Permission",it.toString())
+                    it.value }
                 if (!granted) {
                     showPermissionToast()
                     parentFragmentManager.popBackStack()
                 }
             }
+          inferenceActivityLauncher = registerForActivityResult(InferenceActivityContract()){
+            //create the launcher for the classify activity
+              results ->
+              val label = results!![0]
+              Log.d("Result Label", label)
+              val uriString = results[1]
+              //save result
+              Log.d("ImagePath",uriString.toUri().path!!)
+              Log.d("Label",label)
+
+              val exifInterface = ExifInterface(uriString.toUri().path!!)
+              exifInterface.setAttribute(Config.EXIF_PLANT_STATUS_TAG, label)
+              Log.d("Exif has Attribute","${exifInterface.hasAttribute(Config.EXIF_PLANT_STATUS_TAG)}")
+              exifInterface.saveAttributes()
+          }
 
         if (hasPermissions()) {
             loadImages()
@@ -76,10 +99,8 @@ class GalleryFragment : Fragment() {
                 requestPermissions()
             }
         }
-
         return view
     }
-
 
     private fun hasPermissions(): Boolean {
         val checkMediaPermission = ContextCompat.checkSelfPermission(
@@ -90,7 +111,9 @@ class GalleryFragment : Fragment() {
             requireContext(),
             Manifest.permission.ACCESS_MEDIA_LOCATION
         )
-        return checkMediaPermission == PackageManager.PERMISSION_GRANTED && checkLocationPermission == PackageManager.PERMISSION_GRANTED
+
+        return checkMediaPermission == PackageManager.PERMISSION_GRANTED &&
+                checkLocationPermission == PackageManager.PERMISSION_GRANTED
     }
 
     private fun shouldShowRequestPermissionRationale(): Boolean {
@@ -102,6 +125,8 @@ class GalleryFragment : Fragment() {
             requireActivity(),
             Manifest.permission.ACCESS_MEDIA_LOCATION
         )
+
+        Log.d("ShoulShowRquestPermissionRationale","${permissionMedia || permissionLocation}")
         return permissionMedia || permissionLocation
     }
 
@@ -109,7 +134,7 @@ class GalleryFragment : Fragment() {
         requestPermissionLauncher.launch(
             arrayOf(
                 Manifest.permission.READ_MEDIA_IMAGES,
-                Manifest.permission.ACCESS_MEDIA_LOCATION
+                Manifest.permission.ACCESS_MEDIA_LOCATION,
             )
         )
     }
@@ -122,6 +147,7 @@ class GalleryFragment : Fragment() {
         ).show()
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onResume() {
         super.onResume()
         if (hasPermissions() && imagesList.isEmpty()) {
@@ -134,6 +160,7 @@ class GalleryFragment : Fragment() {
         imagesList.clear()
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun loadImages() {
         val picturesDirectory =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
@@ -164,6 +191,7 @@ class GalleryFragment : Fragment() {
 
 
     //function that open a dialog to show the image in full screen + other
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun showImageDialog(image: Image, geoLocation: Pair<Double, Double>?) {
         val dialog = Dialog(requireContext())
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -210,9 +238,11 @@ class GalleryFragment : Fragment() {
 
         //TODO aggiungere if per controllo stato pianta
         val plantStatus = dialog.findViewById<TextView>(R.id.plantStatus)
-        plantStatus.text = image.plantStatus
+        val exifInterface = ExifInterface(image.uri.path!!)
+        Log.d("ImagePath",image.uri.path!!)
+        Log.d("Plant status","${exifInterface.getAttribute(Config.EXIF_PLANT_STATUS_TAG)}")
+        plantStatus.text = exifInterface.getAttribute(Config.EXIF_PLANT_STATUS_TAG)
         galleryUtils.setPlantStatusTextColor(image.plantStatus ?: "", plantStatus)
-
         val lat = dialog.findViewById<TextView>(R.id.lat)
         val lon = dialog.findViewById<TextView>(R.id.lon)
         if (geoLocation == null) {
@@ -231,7 +261,9 @@ class GalleryFragment : Fragment() {
 
         val classifyButton = dialog.findViewById<Button>(R.id.classifyButton)
         classifyButton.setOnClickListener {
-            classify(image, plantStatus)
+            classify(image)
+            dialog.dismiss()
+
         }
 
         //open dialog to confirm deletion
@@ -266,45 +298,35 @@ class GalleryFragment : Fragment() {
         dialog.show()
     }
 
-    private fun classify(image: Image, plantStatus: TextView) {
+
+
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun classify(image: Image){
         if (image.uri.path == null) {
             Toast.makeText(requireContext(), "Image not found", Toast.LENGTH_SHORT).show()
             return
         }
-
-        //loading text
-        plantStatus.text = "..."
-        plantStatus.setTextColor(Color.BLACK)
-
         //classify image
-        var res = ""
-        val inferenceActivityLauncher = registerForActivityResult(InferenceActivityContract()){
-            label ->  res = label!!
-
-            //save result
-            val exifInterface = ExifInterface(image.uri.path!!)
-            exifInterface.setAttribute(getString(R.string.plant_status_tag), res)
-            exifInterface.saveAttributes()
-            //set text color
-            plantStatus.text = res
-            galleryUtils.setPlantStatusTextColor(res, plantStatus)
-        }
         inferenceActivityLauncher.launch(image.uri.toString())
-
 
     }
 }
 
-class InferenceActivityContract: ActivityResultContract<String, String?>(){
+class InferenceActivityContract: ActivityResultContract<String, Array<String> ?>(){
     override fun createIntent(context: Context, input: String): Intent {
             return Intent(context,InferencePhaseActivity::class.java).putExtra(Config.URI_TAG,input)
     }
 
-    override fun parseResult(resultCode: Int, intent: Intent?): String? {
+    override fun parseResult(resultCode: Int, intent: Intent?): Array<String>? {
         return if(resultCode != Activity.RESULT_OK)
             null
         else {
-            intent?.getStringExtra("label")
+            val array:Array<String> = Array<String>(2) { it -> "" }
+
+            array[0] = intent?.getStringExtra(Config.LABEL_TAG).toString()
+            array[1] = intent?.getStringExtra(Config.URI_TAG).toString()
+            array
         }
     }
 
