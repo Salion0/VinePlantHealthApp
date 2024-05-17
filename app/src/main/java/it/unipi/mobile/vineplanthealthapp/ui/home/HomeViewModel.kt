@@ -1,11 +1,18 @@
 package it.unipi.mobile.vineplanthealthapp.ui.home
 
+import android.os.Environment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import it.unipi.mobile.vineplanthealthapp.utils.GalleryUtils
+import it.unipi.mobile.vineplanthealthapp.utils.MainUtils
 
 class HomeViewModel : ViewModel() {
-
+    private val picturesDirectory =
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+    private val imageFiles = picturesDirectory.listFiles()
+    private var mainUtils: MainUtils = MainUtils()
+    private lateinit var galleryUtils: GalleryUtils
     private val _text = MutableLiveData<String>().apply {
         value = "Hello! This application is a university project, the aim of this app is to recognize" +
                 "diseases in winegrapes, in order to do so there is a menu on the left where you can find all the functionalities"
@@ -19,20 +26,35 @@ class HomeViewModel : ViewModel() {
     private val _statsTextButton = MutableLiveData<String>().apply {
         value = "Stats"
     }
-    private val _numberOfPlants = MutableLiveData<Int>().apply {
-        value = 15
-    }
-    private val _numberHealty = MutableLiveData<Int>().apply {
-        value = 2
-    }
-    private val _numberDisease = MutableLiveData<Int>().apply {
-        value = 3
+    private val _statsGallery = MutableLiveData<List<Int>>().apply {
+        val list= arrayListOf<Int>()
+        if (imageFiles != null && imageFiles.isNotEmpty()) {
+            val numOfPlants = imageFiles.size
+            var numHealty = 0
+            val imagesList = mainUtils.createArrayImages(imageFiles)
+            for (image in imagesList){
+                println(image.plantStatus)
+                if(image.plantStatus=="HEALTY"){
+                    numHealty++
+                }
+            }
+            list.add(numOfPlants)
+            list.add(numHealty)
+            list.add(numOfPlants-numHealty)
+        }
+        else{
+            list.add(0)
+            list.add(0)
+            list.add(0)
+        }
+        value= list
+
     }
     private val _statsText = MutableLiveData<String>().apply {
-        value= "Plants: " + _numberOfPlants.value +
-                " Healty: " + _numberHealty.value  +
-                " Diseases: " + _numberDisease.value
+        value= "Plants: " + _statsGallery.value?.get(0).toString() +
+               " healty: " +_statsGallery.value?.get(1).toString()
     }
+
     val contactText: LiveData<String> = _contactText
     val text: LiveData<String> = _text
     val contactTextButton: LiveData<String> = _contactTextButton
