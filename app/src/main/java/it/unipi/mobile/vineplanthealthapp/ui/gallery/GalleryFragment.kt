@@ -356,14 +356,32 @@ class ImageAdapter(private val context: Context, var images: List<Image>) : Base
         val imageView: ImageView
         if (convertView == null) {
             imageView = ImageView(context)
-            imageView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,1000)
+            imageView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,600)
             imageView.scaleType = ImageView.ScaleType.CENTER_CROP
             imageView.setPadding(10, 10, 10, 10)
         } else {
             imageView = convertView as ImageView
         }
-
-        imageView.setImageBitmap(images[position].bitmap)
+        val resizedBitmap = resizeBitmap(images[position].bitmap, 350, 450)
+        imageView.setImageBitmap(resizedBitmap)
         return imageView
+    }
+}
+
+fun resizeBitmap(source: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap {
+    if (maxHeight > 0 && maxWidth > 0) {
+        val ratioBitmap = source.width.toFloat() / source.height.toFloat()
+        val ratioMax = maxWidth.toFloat() / maxHeight.toFloat()
+
+        var finalWidth = maxWidth
+        var finalHeight = maxHeight
+        if (ratioMax > ratioBitmap) {
+            finalWidth = (maxHeight.toFloat() * ratioBitmap).toInt()
+        } else {
+            finalHeight = (maxWidth.toFloat() / ratioBitmap).toInt()
+        }
+        return Bitmap.createScaledBitmap(source, finalWidth, finalHeight, true)
+    } else {
+        return source
     }
 }
