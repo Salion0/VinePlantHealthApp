@@ -29,6 +29,7 @@ import it.unipi.mobile.vineplanthealthapp.utils.LocationUtils
 import it.unipi.mobile.vineplanthealthapp.utils.MainUtils
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
+import java.time.format.DateTimeFormatter
 
 class MapFragment : Fragment(), MapListener {
     private lateinit var mMap: MapView
@@ -159,10 +160,12 @@ class MapFragment : Fragment(), MapListener {
         for ((geoPoint, image) in markerMap) {
             val marker = Marker(mMap)
             val timestamp = galleryUtils.getTimestamp(image.uri.path!!)
+            val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+            val date = timestamp?.format(dateFormat)
             val plantStatus = galleryUtils.getPlantStatus(requireContext(), image.uri.path!!)
             marker.position = geoPoint
             marker.icon = resources.getDrawable(R.drawable.ic_map_marker, null)
-            marker.title = "${image.name}\n${timestamp}\n${plantStatus}"
+            marker.title = "${image.name}\n${date}\n${plantStatus}"
             mMap.overlays.add(marker)
         }
 
