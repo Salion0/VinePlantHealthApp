@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.ExifInterface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -45,9 +46,7 @@ class InferencePhaseActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.inference_results)
-        storageActivityResultLauncher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()){}
-
+        storageActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){}
 
         if (intent != null) {
             //get data images from intent
@@ -55,19 +54,20 @@ class InferencePhaseActivity : AppCompatActivity() {
                 val extras: Bundle = intent.extras!!
                 val tensorImage: TensorImage = getTensorFromExtras(extras)
                 val labelRes: String = classify(tensorImage)
-
+                Log.d("Results label",labelRes)
                 val imageView: ImageView = findViewById(R.id.classifiedImg)!!
                 imageView.setImageBitmap(tensorImage.bitmap)
                 val labelView = findViewById<TextView>(R.id.label)
                 labelView.text = labelRes
                 val saveButton = findViewById<Button>(R.id.saveButton)
+
                 saveButton.setOnClickListener() {
                     if (checkStoragePermissions()) {
-                        val returnIntent = Intent()
-                        returnIntent.putExtra(Config.LABEL_TAG, labelRes)
-                        returnIntent.putExtra(Config.URI_TAG, extras.getString(Config.URI_TAG))
-                        setResult(RESULT_OK, returnIntent)
-                        finish()
+                        val exifInterface = ExifInterface(extras.getString(Config.URI_TAG)!!.toUri().path!!)
+                        exifInterface.setAttribute(Config.EXIF_PLANT_STATUS_TAG, labelRes)
+                        Log.d("Exif has Attribute","${exifInterface.hasAttribute(Config.EXIF_PLANT_STATUS_TAG)}")
+                        exifInterface.saveAttributes()
+                        finish();
                     } else {
                         //Android is 11 (R) or above
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -75,7 +75,7 @@ class InferencePhaseActivity : AppCompatActivity() {
                                 val intent = Intent()
                                 intent.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                                 val uri = Uri.fromParts("package", this.getPackageName(),null);
-                                intent.setData(uri);
+                                intent.setData(uri)
                                 storageActivityResultLauncher.launch(intent);
                             } catch (e:Exception) {
                                 val intent = Intent()
@@ -93,7 +93,7 @@ class InferencePhaseActivity : AppCompatActivity() {
     }
 
 
-    fun checkStoragePermissions(): Boolean {
+    private fun checkStoragePermissions(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             //Android is 11 (R) or above
             Environment.isExternalStorageManager()
@@ -106,7 +106,6 @@ class InferencePhaseActivity : AppCompatActivity() {
             read == PackageManager.PERMISSION_GRANTED && write == PackageManager.PERMISSION_GRANTED
         }
     }
-
     private fun classify(tensorImage: TensorImage):String{
         val model:Model = Model.newInstance(baseContext)
         val label:String
