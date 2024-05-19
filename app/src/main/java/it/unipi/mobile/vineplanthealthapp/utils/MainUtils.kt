@@ -1,27 +1,26 @@
 package it.unipi.mobile.vineplanthealthapp.utils
 
-import android.net.Uri
-import android.provider.MediaStore
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.ExifInterface
+import android.net.Uri
 import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
-import it.unipi.mobile.vineplanthealthapp.ui.gallery.Image
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.Date
-import java.io.File
 import it.unipi.mobile.vineplanthealthapp.R
+import it.unipi.mobile.vineplanthealthapp.ui.gallery.Image
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 class MainUtils{
 
     fun saveImage(contentResolver: ContentResolver, imageUri: Uri, latitude: Double, longitude: Double){
         val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, "new_image.jpg")
             put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
             put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
         }
@@ -36,7 +35,7 @@ class MainUtils{
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
                 outputStream.close()
             }
-
+            Log.d("Image Uri when saved",uri.toString())
             val file = File(getRealPathFromURI(contentResolver, uri))
             val exifInterface = ExifInterface(file.absolutePath)
 

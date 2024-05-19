@@ -1,41 +1,41 @@
 package it.unipi.mobile.vineplanthealthapp
 
 import android.Manifest
-import android.app.ProgressDialog
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
+import android.util.Log
 import android.view.Menu
-import com.google.android.material.navigation.NavigationView
+import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import androidx.drawerlayout.widget.DrawerLayout
-import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.navigation.NavigationView
 import it.unipi.mobile.vineplanthealthapp.databinding.ActivityMainBinding
-import androidx.activity.result.contract.ActivityResultContracts
-import android.net.Uri
-import android.os.Environment
-import android.util.Log
-import android.widget.Toast
-import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
-import java.io.File
-import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
-import android.content.Context
 import it.unipi.mobile.vineplanthealthapp.utils.LocationUtils
 import it.unipi.mobile.vineplanthealthapp.utils.MainUtils
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     private lateinit var mainUtils: MainUtils
+    private lateinit var inferenceActivityLauncher : ActivityResultLauncher<String>
 
     private lateinit var imageUri: Uri
     private var requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -57,8 +57,21 @@ class MainActivity : AppCompatActivity() {
             else{
                 mainUtils.saveImage(contentResolver, imageUri, currentLocation?.latitude ?: 0.0, currentLocation?.longitude ?: 0.0)
                 Toast.makeText(this, "Image captured successful", Toast.LENGTH_SHORT).show()
+
+                val uriLastImage = getLastImageFromGallery()
+                Log.d("Image Uri",uriLastImage.toString())
+                    val intent = Intent(baseContext,InferencePhaseActivity::class.java).putExtra(Config.URI_TAG,uriLastImage.toString())
+                startActivity(intent)
+
             }
         }
+    }
+    private fun getLastImageFromGallery(): Uri? {
+        val picturesDirectory =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+        val imageFiles = picturesDirectory.listFiles()
+        val lastSavedImage = mainUtils.createArrayImages(imageFiles).last()
+        return lastSavedImage.uri
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
