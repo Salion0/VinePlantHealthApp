@@ -215,7 +215,6 @@ class GalleryFragment : Fragment() {
             galleryUtils.setEditable(imageName, saveButton, revertButton, editButton)
         }
 
-        //TODO aggiungere if per controllo stato pianta
         val plantStatus = dialog.findViewById<TextView>(R.id.plantStatus)
         val exifInterface = ExifInterface(image.uri.path!!)
         Log.d("ImagePath",image.uri.path!!)

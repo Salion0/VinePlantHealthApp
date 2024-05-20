@@ -15,6 +15,8 @@ public class Config {
     public static DataType MODEL_INPUT_DATA_TYPE = DataType.FLOAT32;
 
     public static String[] LABELS = new String[]{"Black Rot","ESCA","Healty","Leaf Blight"};
+
+    public static String HEALTHY_LABEL  =  LABELS[2];
     public static int TARGET_HEIGHT = 256;
     public static int WIDTH_HEIGHT= 256;
 }
