@@ -1,16 +1,17 @@
 package it.unipi.mobile.vineplanthealthapp.utils
 
+import android.content.Context
+import android.graphics.Color
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
-import androidx.exifinterface.media.ExifInterface
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import android.content.Context
-import android.graphics.Color
 import android.widget.TextView
 import android.widget.Toast
+import androidx.exifinterface.media.ExifInterface
+import it.unipi.mobile.vineplanthealthapp.Config
 import it.unipi.mobile.vineplanthealthapp.R
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class GalleryUtils(){
 
@@ -55,7 +56,7 @@ class GalleryUtils(){
 
     public fun getPlantStatus(context: Context, imagePath: String): String?{
         val exifInterface = ExifInterface(imagePath)
-        return exifInterface.getAttribute(context.getString(R.string.plant_status_tag)) ?: context.getString(R.string.plant_status_not_classified)
+        return exifInterface.getAttribute(Config.EXIF_PLANT_STATUS_TAG) ?: context.getString(R.string.plant_status_not_classified)
     }
 
     public fun setPlantStatusTextColor(res: String, plantStatus: TextView){
