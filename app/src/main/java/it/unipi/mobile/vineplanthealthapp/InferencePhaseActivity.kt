@@ -69,7 +69,7 @@ class InferencePhaseActivity : AppCompatActivity() {
                         exifInterface.saveAttributes()
                         finish();
                     } else {
-                        //Android is 11 (R) or above
+                        //Android is 11 or above
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                             try {
                                 val intent = Intent()
@@ -95,7 +95,7 @@ class InferencePhaseActivity : AppCompatActivity() {
 
     private fun checkStoragePermissions(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            //Android is 11 (R) or above
+            //Android is 11 or above
             Environment.isExternalStorageManager()
         } else {
             //Below android 11

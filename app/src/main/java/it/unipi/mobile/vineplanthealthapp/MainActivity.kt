@@ -164,7 +164,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         if(!LocationUtils(this).isLocationEnabled()){
-            Toast.makeText(this, "Location not enabled", Toast.LENGTH_SHORT).show()
             return
         }
 
