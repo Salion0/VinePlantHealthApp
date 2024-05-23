@@ -13,22 +13,23 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import it.unipi.mobile.vineplanthealthapp.R
-import org.osmdroid.config.Configuration
-import org.osmdroid.events.MapListener
-import org.osmdroid.events.ScrollEvent
-import org.osmdroid.events.ZoomEvent
-import org.osmdroid.views.MapView
-import org.osmdroid.api.IMapController
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import it.unipi.mobile.vineplanthealthapp.databinding.FragmentMapBinding
 import it.unipi.mobile.vineplanthealthapp.ui.gallery.Image
 import it.unipi.mobile.vineplanthealthapp.utils.GalleryUtils
 import it.unipi.mobile.vineplanthealthapp.utils.LocationUtils
 import it.unipi.mobile.vineplanthealthapp.utils.MainUtils
+import org.osmdroid.api.IMapController
+import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.time.format.DateTimeFormatter
 
 class MapFragment : Fragment(), MapListener {
     private lateinit var mMap: MapView
@@ -43,12 +44,14 @@ class MapFragment : Fragment(), MapListener {
     private val binding get() = _binding!!
     val centroItalia = GeoPoint(42.8333, 12.8333, 53.0)
     var zoomItalia = 7.0
+    private var isFirstViewCreation = true
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentMapBinding.inflate(inflater, container, false)
+        isFirstViewCreation = true
         return binding.root
     }
 
@@ -139,7 +142,6 @@ class MapFragment : Fragment(), MapListener {
             if(geoLocation == null || timestamp == null) {
                 continue
             }
-
             val geoPoint = GeoPoint(geoLocation.first, geoLocation.second)
 
             // Check if a marker already exists at this location
@@ -157,9 +159,13 @@ class MapFragment : Fragment(), MapListener {
         // Now add the markers to the map
         for ((geoPoint, image) in markerMap) {
             val marker = Marker(mMap)
+            val timestamp = galleryUtils.getTimestamp(image.uri.path!!)
+            val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+            val date = timestamp?.format(dateFormat)
+            val plantStatus = galleryUtils.getPlantStatus(requireContext(), image.uri.path!!)
             marker.position = geoPoint
             marker.icon = resources.getDrawable(R.drawable.ic_map_marker, null)
-            marker.title = image.name
+            marker.title = "${image.name}\n${date}\n${plantStatus}"
             mMap.overlays.add(marker)
         }
 
@@ -187,7 +193,11 @@ class MapFragment : Fragment(), MapListener {
     override fun onResume() {
         super.onResume()
         Log.e("TAG", "onresume")
-        goToPosition()
+        if (!isFirstViewCreation) {
+            goToPosition()
+        } else {
+            isFirstViewCreation = false
+        }
     }
 
     override fun onDestroyView() {

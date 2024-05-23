@@ -14,7 +14,7 @@ class HomeViewModel : ViewModel() {
 
     private var mainUtils: MainUtils = MainUtils()
     private val _text = MutableLiveData<String>().apply {
-        value = "Hello! This application is a university project, the aim of this app is to recognize" +
+        value = "Hello! This application is a university project, the aim of this app is to recognize " +
                 "diseases in winegrapes, in order to do so there is a menu on the left where you can find all the functionalities"
     }
     private val _contactText = MutableLiveData<String>().apply {
@@ -58,9 +58,11 @@ class HomeViewModel : ViewModel() {
 
     }
     private val _statsText = MutableLiveData<String>().apply {
+
         value= "Stats\n "+
                 "photos: " + _statsGallery.value?.get(0).toString() +
                " healty: " +_statsGallery.value?.get(1).toString()
+
     }
 
     val contactText: LiveData<String> = _contactText

@@ -1,10 +1,8 @@
 package it.unipi.mobile.vineplanthealthapp.ui.gallery
 
 import android.Manifest
-import android.app.Activity
 import android.app.Dialog
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -28,15 +26,12 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import it.unipi.mobile.vineplanthealthapp.Config
-import it.unipi.mobile.vineplanthealthapp.InferencePhaseActivity
 import it.unipi.mobile.vineplanthealthapp.R
 import it.unipi.mobile.vineplanthealthapp.utils.GalleryUtils
 import it.unipi.mobile.vineplanthealthapp.utils.MainUtils
@@ -51,8 +46,6 @@ class GalleryFragment : Fragment() {
     private lateinit var galleryUtils: GalleryUtils
     private var mainUtils: MainUtils = MainUtils()
     private var imagesList: MutableList<Image> = ArrayList()
-    private lateinit var inferenceActivityLauncher : ActivityResultLauncher<String>
-
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -73,21 +66,7 @@ class GalleryFragment : Fragment() {
                     parentFragmentManager.popBackStack()
                 }
             }
-          inferenceActivityLauncher = registerForActivityResult(InferenceActivityContract()){
-            //create the launcher for the classify activity
-              results ->
-              val label = results!![0]
-              Log.d("Result Label", label)
-              val uriString = results[1]
-              //save result
-              Log.d("ImagePath",uriString.toUri().path!!)
-              Log.d("Label",label)
 
-              val exifInterface = ExifInterface(uriString.toUri().path!!)
-              exifInterface.setAttribute(Config.EXIF_PLANT_STATUS_TAG, label)
-              Log.d("Exif has Attribute","${exifInterface.hasAttribute(Config.EXIF_PLANT_STATUS_TAG)}")
-              exifInterface.saveAttributes()
-          }
 
         if (hasPermissions()) {
             loadImages()
@@ -235,7 +214,6 @@ class GalleryFragment : Fragment() {
             galleryUtils.setEditable(imageName, saveButton, revertButton, editButton)
         }
 
-        //TODO aggiungere if per controllo stato pianta
         val plantStatus = dialog.findViewById<TextView>(R.id.plantStatus)
         val exifInterface = ExifInterface(image.uri.path!!)
         Log.d("ImagePath",image.uri.path!!)
@@ -256,13 +234,6 @@ class GalleryFragment : Fragment() {
         val closeButton = dialog.findViewById<ImageButton>(R.id.closeButton)
         closeButton.setOnClickListener {
             dialog.dismiss()
-        }
-
-        val classifyButton = dialog.findViewById<Button>(R.id.classifyButton)
-        classifyButton.setOnClickListener {
-            classify(image)
-            dialog.dismiss()
-
         }
 
         //open dialog to confirm deletion
@@ -296,40 +267,8 @@ class GalleryFragment : Fragment() {
 
         dialog.show()
     }
-
-
-
-
-    @RequiresApi(Build.VERSION_CODES.Q)
-    private fun classify(image: Image){
-        if (image.uri.path == null) {
-            Toast.makeText(requireContext(), "Image not found", Toast.LENGTH_SHORT).show()
-            return
-        }
-        //classify image
-        inferenceActivityLauncher.launch(image.uri.toString())
-
-    }
 }
 
-class InferenceActivityContract: ActivityResultContract<String, Array<String> ?>(){
-    override fun createIntent(context: Context, input: String): Intent {
-            return Intent(context,InferencePhaseActivity::class.java).putExtra(Config.URI_TAG,input)
-    }
-
-    override fun parseResult(resultCode: Int, intent: Intent?): Array<String>? {
-        return if(resultCode != Activity.RESULT_OK)
-            null
-        else {
-            val array:Array<String> = Array<String>(2) { it -> "" }
-
-            array[0] = intent?.getStringExtra(Config.LABEL_TAG).toString()
-            array[1] = intent?.getStringExtra(Config.URI_TAG).toString()
-            array
-        }
-    }
-
-}
 data class Image(
     val bitmap: Bitmap,
     val uri: Uri,
@@ -355,14 +294,32 @@ class ImageAdapter(private val context: Context, var images: List<Image>) : Base
         val imageView: ImageView
         if (convertView == null) {
             imageView = ImageView(context)
-            imageView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,1000)
+            imageView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,600)
             imageView.scaleType = ImageView.ScaleType.CENTER_CROP
             imageView.setPadding(10, 10, 10, 10)
         } else {
             imageView = convertView as ImageView
         }
-
-        imageView.setImageBitmap(images[position].bitmap)
+        val resizedBitmap = resizeBitmap(images[position].bitmap, 350, 450)
+        imageView.setImageBitmap(resizedBitmap)
         return imageView
+    }
+}
+
+fun resizeBitmap(source: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap {
+    if (maxHeight > 0 && maxWidth > 0) {
+        val ratioBitmap = source.width.toFloat() / source.height.toFloat()
+        val ratioMax = maxWidth.toFloat() / maxHeight.toFloat()
+
+        var finalWidth = maxWidth
+        var finalHeight = maxHeight
+        if (ratioMax > ratioBitmap) {
+            finalWidth = (maxHeight.toFloat() * ratioBitmap).toInt()
+        } else {
+            finalHeight = (maxWidth.toFloat() / ratioBitmap).toInt()
+        }
+        return Bitmap.createScaledBitmap(source, finalWidth, finalHeight, true)
+    } else {
+        return source
     }
 }

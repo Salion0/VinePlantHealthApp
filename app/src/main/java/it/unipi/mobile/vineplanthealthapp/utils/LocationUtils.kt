@@ -23,8 +23,6 @@ class LocationUtils(private val context: Context) {
                 coarseLocationPermission == PackageManager.PERMISSION_GRANTED
     }
 
-    // Move requestLocationPermissions() and onRequestPermissionsResult() to your Activity or Fragment
-
     public fun isLocationEnabled(): Boolean {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||

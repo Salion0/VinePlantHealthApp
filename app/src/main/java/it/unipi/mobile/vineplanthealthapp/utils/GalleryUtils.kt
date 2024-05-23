@@ -1,9 +1,14 @@
 package it.unipi.mobile.vineplanthealthapp.utils
 
+import android.content.Context
+import android.graphics.Color
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.TextView
 import androidx.exifinterface.media.ExifInterface
+import it.unipi.mobile.vineplanthealthapp.Config
+import it.unipi.mobile.vineplanthealthapp.R
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import android.content.Context
@@ -14,6 +19,7 @@ import android.widget.TextView
 import android.widget.Toast
 import it.unipi.mobile.vineplanthealthapp.R
 import java.io.File
+
 
 class GalleryUtils(){
 
@@ -58,19 +64,20 @@ class GalleryUtils(){
 
     public fun getPlantStatus(context: Context, imagePath: String): String?{
         val exifInterface = ExifInterface(imagePath)
-        return exifInterface.getAttribute(context.getString(R.string.plant_status_tag)) ?: context.getString(R.string.plant_status_not_classified)
+        return exifInterface.getAttribute(Config.EXIF_PLANT_STATUS_TAG) ?: context.getString(R.string.plant_status_not_classified)
     }
 
     public fun setPlantStatusTextColor(res: String, plantStatus: TextView){
-        if(res == plantStatus.context.getString(R.string.plant_status_healthy)){
-            Toast.makeText(plantStatus.context, "Healthy", Toast.LENGTH_SHORT).show()
-            plantStatus.setTextColor(Color.GREEN)
-        } else if(res == plantStatus.context.getString(R.string.plant_status_sick)){
+        val diseases: List<String> = Config.LABELS.filter { it -> !it.equals(Config.HEALTHY_LABEL) } ;
+        if(diseases.contains(res)) {
             plantStatus.setTextColor(Color.RED)
-        } else {
+        }else if(res==Config.HEALTHY_LABEL){
+            plantStatus.setTextColor(Color.GREEN)
+        }else{
             plantStatus.setTextColor(Color.BLACK)
         }
     }
+
     public fun getDirectoryImages(): File {
         val picturesDirectoryDefault =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
@@ -86,3 +93,4 @@ class GalleryUtils(){
         return picturesDirectory
     }
 }
+
