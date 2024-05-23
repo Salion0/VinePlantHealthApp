@@ -11,13 +11,8 @@ import it.unipi.mobile.vineplanthealthapp.Config
 import it.unipi.mobile.vineplanthealthapp.R
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import android.content.Context
-import android.graphics.Color
 import android.os.Environment
 import android.util.Log
-import android.widget.TextView
-import android.widget.Toast
-import it.unipi.mobile.vineplanthealthapp.R
 import java.io.File
 
 
