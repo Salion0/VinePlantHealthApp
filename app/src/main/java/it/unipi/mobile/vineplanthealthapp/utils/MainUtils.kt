@@ -22,7 +22,7 @@ class MainUtils{
     fun saveImage(contentResolver: ContentResolver, imageUri: Uri, latitude: Double, longitude: Double){
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES+"/VinePlantApp")
         }
 
         val inputStream = contentResolver.openInputStream(imageUri)
