@@ -32,41 +32,14 @@ class HomeFragment : Fragment() {
         val textView: TextView = binding.textHome
         val contactText: TextView = binding.textContacts
         val statText: TextView = binding.textStats
-        val buttonContacts: Button = binding.buttonContacts
-        val buttonStats: Button = binding.buttonStats
         homeViewModel.text.observe(viewLifecycleOwner) {
             textView.text = it
         }
-        homeViewModel.contactTextButton.observe(viewLifecycleOwner){
-            buttonContacts.text = it
+        homeViewModel.contactText.observe(viewLifecycleOwner) {
+            contactText.text = it
         }
-        homeViewModel.statsTextButton.observe(viewLifecycleOwner){
-            buttonStats.text = it
-        }
-        // Initially hide the second TextView
-        contactText.visibility = View.GONE
-        statText.visibility = View.GONE
-        // Setting up the button click listener
-        buttonContacts.setOnClickListener {
-            // Toggle the visibility of the additional TextView
-            if (contactText.visibility == View.VISIBLE) {
-                contactText.visibility = View.GONE
-            } else {
-                contactText.visibility = View.VISIBLE
-                homeViewModel.contactText.observe(viewLifecycleOwner) {
-                    contactText.text = it
-                }
-            }
-        }
-        buttonStats.setOnClickListener {
-            if(statText.visibility == View.VISIBLE){
-                statText.visibility = View.GONE
-            } else {
-                statText.visibility = View.VISIBLE
-                homeViewModel.statsText.observe(viewLifecycleOwner){
-                    statText.text = it
-                }
-            }
+        homeViewModel.statsText.observe(viewLifecycleOwner){
+            statText.text = it
         }
         return root
     }

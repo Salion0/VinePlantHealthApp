@@ -162,8 +162,7 @@ class GalleryFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun loadImages() {
-        val picturesDirectory =
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+        val picturesDirectory = galleryUtils.getDirectoryImages()
         val imageFiles = picturesDirectory.listFiles()
 
         if (imageFiles != null && imageFiles.isNotEmpty()) {

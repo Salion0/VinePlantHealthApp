@@ -8,9 +8,12 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import android.content.Context
 import android.graphics.Color
+import android.os.Environment
+import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
 import it.unipi.mobile.vineplanthealthapp.R
+import java.io.File
 
 class GalleryUtils(){
 
@@ -67,5 +70,19 @@ class GalleryUtils(){
         } else {
             plantStatus.setTextColor(Color.BLACK)
         }
+    }
+    public fun getDirectoryImages(): File {
+        val picturesDirectoryDefault =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+        val picturesDirectory = File(picturesDirectoryDefault, "VinePlantApp")
+
+        if (!picturesDirectory.exists()) {
+            if (picturesDirectory.mkdirs()) {
+                Log.d("MyApp", "Directory created")
+            } else {
+                Log.d("MyApp", "Failed to create directory")
+            }
+        }
+        return picturesDirectory
     }
 }
