@@ -14,7 +14,7 @@ public class Config {
     public static String URI_TAG = "URI";
     public static DataType MODEL_INPUT_DATA_TYPE = DataType.FLOAT32;
 
-    public static String[] LABELS = new String[]{"Black Rot","ESCA","Healty","Leaf Blight"};
+    public static String[] LABELS = new String[]{"Black Rot","ESCA","Healthy","Leaf Blight"};
 
     public static String HEALTHY_LABEL  =  LABELS[2];
     public static int TARGET_HEIGHT = 256;
