@@ -37,17 +37,17 @@ class HomeViewModel : ViewModel() {
         val list= arrayListOf<Int>()
         if (imageFiles != null && imageFiles.isNotEmpty()) {
             val numOfPlants = imageFiles.size
-            var numHealthy = 0
+            var numHealty = 0
             val imagesList = mainUtils.createArrayImages(imageFiles)
             for (image in imagesList){
                 println(image.plantStatus)
-                if(image.plantStatus=="HEALTHY"){
-                    numHealthy++
+                if(image.plantStatus=="HEALTY"){
+                    numHealty++
                 }
             }
             list.add(numOfPlants)
-            list.add(numHealthy)
-            list.add(numOfPlants-numHealthy)
+            list.add(numHealty)
+            list.add(numOfPlants-numHealty)
         }
         else{
             list.add(0)
@@ -61,7 +61,7 @@ class HomeViewModel : ViewModel() {
 
         value= "Stats\n "+
                 "photos: " + _statsGallery.value?.get(0).toString() +
-               " healthy: " +_statsGallery.value?.get(1).toString()
+               " healty: " +_statsGallery.value?.get(1).toString()
 
     }
 
