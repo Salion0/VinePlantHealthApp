@@ -43,3 +43,15 @@ Commit list [here](https://github.com/Salion0/VinePlantHealthApp/commits/main/?a
 - Added map and marker vectors
 - Home fragment
   - Stats for photos
+ 
+### Salvatore Patisso
+Commit list [here](https://github.com/Salion0/VinePlantHealthApp/commits/main/?author=Salion0)
+- Total commits: 17
+- Total row added/removed: 712 ++    311 --
+-  Inference Activity
+-  Managed intents and intents extras to start activity with usefull data
+-  Importing tflite model in Android Studio
+-  classify input image using inference and managing uri image
+-  Using ExifInterface to save labels in image metada
+- requesting special file access permission for accessing files metadata
+-  bug fixing in different part of the app
