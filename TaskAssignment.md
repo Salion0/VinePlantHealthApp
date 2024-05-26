@@ -1,5 +1,18 @@
 # PROJECT TASK ASSIGNMENT
 
+### Edoardo Focacci 
+Commit list [here](https://github.com/Salion0/VinePlantHealthApp/commits/main/?author=Fochi1999)
+- Total commits: 10
+- Total row added/removed: 848 ++    99 --
+- Home page managment:
+  - stats
+- Model study and creation:
+  - Study and research of papers and dataset
+  - Tuning of the CNN 
+  - Model train and formation 
+  - Model evaluation
+  - Model conversion
+- App testing
 ### Emmanuel Piazza 
 Commit list [here](https://github.com/Salion0/VinePlantHealthApp/commits/main/?author=Plaza99) and [here](https://github.com/Salion0/VinePlantHealthApp/commits/main/?author=epiazzaRJC) 
 - Total commits: 21 
@@ -16,6 +29,9 @@ Commit list [here](https://github.com/Salion0/VinePlantHealthApp/commits/main/?a
 - Managed string.xml file and app logo
 
 ### Antonino Patania
+Commit list [here](https://github.com/Salion0/VinePlantHealthApp/commits/main/?author=tonipata)
+- Total commits: 19
+- Total row added/removed: 627 ++    249 --
 - Map fragment
   - Use of OpenStreetMap
   - Use of osmdroid
