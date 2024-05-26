@@ -29,6 +29,7 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.io.File
 import java.time.format.DateTimeFormatter
 
 class MapFragment : Fragment(), MapListener {
@@ -125,7 +126,7 @@ class MapFragment : Fragment(), MapListener {
         }
 
         var images = mutableListOf<Image>()
-        val picturesDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+        val picturesDirectory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"VinePlantApp")
         val imageFiles = picturesDirectory.listFiles()
 
         if (imageFiles != null) {
