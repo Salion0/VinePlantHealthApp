@@ -1,5 +1,6 @@
 package it.unipi.mobile.vineplanthealthapp.ui.home
 
+import android.media.ExifInterface
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
@@ -9,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import it.unipi.mobile.vineplanthealthapp.Config
@@ -63,23 +65,25 @@ class HomeFragment : Fragment() {
     }
     // function to update the number of images number
     private fun updateStats(){
-        var images = mutableListOf<Image>()
         val picturesDirectory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"VinePlantApp")
         val imageFiles = picturesDirectory.listFiles()
-
+        healthyValue = 0
         if (imageFiles == null) {
             photosValue = 0
-            healthyValue = 0
         }
         else {
             photosValue = imageFiles.size
             // print the number of images
             Log.d("MyApp", "Number of images apply: $photosValue")
-            images = mainUtils.createArrayImages(imageFiles)
+            val images = mainUtils.createArrayImages(imageFiles)
             Log.d("MyApp", "Number of images: ${images.size}")
 
             for (image in images){
-                if(image.plantStatus == Config.HEALTHY_LABEL){
+                val exifInterface = ExifInterface(image.uri.path!!)
+                val plantStatus = exifInterface.getAttribute(Config.EXIF_PLANT_STATUS_TAG);
+                Log.d("ImagePath",image.uri.path!!)
+                Log.d("Plant status","${exifInterface.getAttribute(Config.EXIF_PLANT_STATUS_TAG)}")
+                if( plantStatus== Config.HEALTHY_LABEL){
                     healthyValue++
                 }
             }

@@ -59,7 +59,7 @@ class InferencePhaseActivity : AppCompatActivity() {
                 imageView.setImageBitmap(tensorImage.bitmap)
                 val labelView = findViewById<TextView>(R.id.label)
                 if (labelRes == Config.HEALTHY_LABEL) {
-                    labelView.text = "Healthy"
+                    labelView.text = "Healty"
                 } else
                     labelView.text = labelRes
 
