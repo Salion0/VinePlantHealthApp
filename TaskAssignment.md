@@ -11,7 +11,6 @@
   - Camera permissions management
   - Image saving (with position and timestamp info)
 - Managed string.xml file and app logo
-- Managed 'classify()' method (not the model implementation itself) and plant status TAG setting and retrieval from images
 
 ### Antonino Patania
 - Map fragment
