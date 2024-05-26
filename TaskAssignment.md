@@ -9,7 +9,7 @@ Commit list [here](https://github.com/Salion0/VinePlantHealthApp/commits/main/?a
 - Model study and creation:
   - Study and research of papers and dataset
   - Tuning of the CNN 
-  - Model train and formation 
+  - Model train and formation using keras and tensorflow
   - Model evaluation
   - Model conversion
 - App testing
