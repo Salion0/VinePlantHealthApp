@@ -1,7 +1,9 @@
 # PROJECT TASK ASSIGNMENT
 
 ### Emmanuel Piazza 
-Commit list [here](https://github.com/Salion0/VinePlantHealthApp/commits/main/?author=Plaza99) and [here](https://github.com/Salion0/VinePlantHealthApp/commits/main/?author=epiazzaRJC)
+Commit list [here](https://github.com/Salion0/VinePlantHealthApp/commits/main/?author=Plaza99) and [here](https://github.com/Salion0/VinePlantHealthApp/commits/main/?author=epiazzaRJC) 
+- Total commits: 21 
+- Total row added/removed: +2921 / -571
 - Gallery Page management
   - Fragment creation
   - Gallery images retrieval and viewing
