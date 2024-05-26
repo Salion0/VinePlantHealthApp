@@ -68,10 +68,14 @@ class MainActivity : AppCompatActivity() {
     }
     private fun getLastImageFromGallery(): Uri? {
         val picturesDirectory =
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+            File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"VinePlantApp")
         val imageFiles = picturesDirectory.listFiles()
-        val lastSavedImage = mainUtils.createArrayImages(imageFiles).last()
-        return lastSavedImage.uri
+        val arrayImage = mainUtils.createArrayImages(imageFiles)
+        val lastSavedImage = arrayImage.sortedWith(compareByDescending { File(it.uri.path).lastModified() }).firstOrNull()
+        if (lastSavedImage != null) {
+            return lastSavedImage.uri
+        }
+        return null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -126,7 +130,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun manageCameraButton(){
-        val imageFile = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "new_image.jpg")
+        val imageFile = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES+"/VinePlantApp"), "new_image.jpg")
         imageUri = FileProvider.getUriForFile(
             this,
             "${BuildConfig.APPLICATION_ID}.provider",
