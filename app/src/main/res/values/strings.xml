@@ -26,5 +26,7 @@
     <string name="plant_status_not_classified">Not classified yet</string>
     <string name="plant_status_healthy">Healthy</string>
     <string name="plant_status_sick">Sick</string>
-
+    <string name="home_presentation">Hello! This application is a university project, the aim of this app is to recognize diseases in winegrapes, in order to do so there is a menu on the left where you can find all the functionalities</string>
+    <string name="home_contacts"> · Edoardo Focacci, e.focacci@studenti.unipi.it · Salvatore Patisso, s.patisso@studenti.unipi.it · Antonino Patania, a.patania4@studenti.unipi.it · Emmanuel Piazza, e.piazza3@studenti.unipi.it</string>
+    <string name="stat_text">Stats\n Photos: %1$d Healthy: %2$d</string>
 </resources>
