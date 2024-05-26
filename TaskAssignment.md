@@ -22,3 +22,5 @@
   - Position utility functions
 - Managed string.xml
 - Added map and marker vectors
+- Home fragment
+  - Stats for photos
