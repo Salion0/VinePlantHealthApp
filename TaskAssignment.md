@@ -1,6 +1,7 @@
 # PROJECT TASK ASSIGNMENT
 
-### Emmanuel Piazza
+### Emmanuel Piazza 
+Commit list [here](https://github.com/Salion0/VinePlantHealthApp/commits/main/?author=Plaza99) and [here](https://github.com/Salion0/VinePlantHealthApp/commits/main/?author=epiazzaRJC)
 - Gallery Page management
   - Fragment creation
   - Gallery images retrieval and viewing
