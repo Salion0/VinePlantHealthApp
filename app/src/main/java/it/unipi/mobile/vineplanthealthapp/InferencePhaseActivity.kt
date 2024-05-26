@@ -58,7 +58,11 @@ class InferencePhaseActivity : AppCompatActivity() {
                 val imageView: ImageView = findViewById(R.id.classifiedImg)!!
                 imageView.setImageBitmap(tensorImage.bitmap)
                 val labelView = findViewById<TextView>(R.id.label)
-                labelView.text = labelRes
+                if (labelRes == Config.HEALTHY_LABEL) {
+                    labelView.text = "Healty"
+                } else
+                    labelView.text = labelRes
+
                 val saveButton = findViewById<Button>(R.id.saveButton)
 
                 saveButton.setOnClickListener() {
